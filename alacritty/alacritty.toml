@@ -1,0 +1,22 @@
+# Window settings
+[window]
+padding.x = 5
+padding.y = 5
+opacity = 0.9
+decorations = "buttonless" # For macOS
+
+# Font settings
+[font]
+normal.family = "JetBrainsMono Nerd Font"
+normal.style = "Regular"
+size = 14
+
+# Color scheme (example)
+[colors.primary]
+foreground = "#F8F8F2"
+background = "#282A36"
+
+[terminal]
+shell = "/opt/homebrew/bin/bash"
+
+
