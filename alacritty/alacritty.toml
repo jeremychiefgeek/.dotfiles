@@ -2,21 +2,21 @@
 [window]
 padding.x = 5
 padding.y = 5
-opacity = 0.9
+opacity = 1.0
 decorations = "buttonless" # For macOS
 
 # Font settings
 [font]
 normal.family = "JetBrainsMono Nerd Font"
 normal.style = "Regular"
-size = 14
+size = 12
 
 # Color scheme (example)
 [colors.primary]
-foreground = "#F8F8F2"
-background = "#282A36"
+foreground = "#0a0a0c"
+background = "#0a0a0c"
 
 [terminal]
-shell = "/opt/homebrew/bin/bash"
+shell = "C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe"
 
 
