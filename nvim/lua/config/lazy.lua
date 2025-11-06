@@ -58,4 +58,5 @@ require("lazy").setup({
     },
   },
 })
-vim.cmd([[colorscheme ash]]) -- INFO: Not all colorschemes use this.
+-- vim.cmd.colorscheme("gruber-darker")
+vim.cmd([[colorscheme gruber-darker]]) -- INFO: Not all colorschemes use this.
