@@ -15,3 +15,17 @@ vim.opt.rtp:prepend(lazypath)
 require("vim-options")
 require("config")
 require("lazy").setup("plugins")
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function()
+    -- Debug: print the current file path
+    local current_file = vim.fn.expand('%:p')
+    local notebook = require("zk.util").notebook_root(current_file)
+    if notebook ~= nil then
+      local function map(...) vim.api.nvim_buf_set_keymap(0, ...) end
+      local opts = { noremap=true, silent=false }
+      map("n", "<CR>", "<Cmd>lua vim.lsp.buf.definition()<CR>", opts)
+    end
+  end
+})
