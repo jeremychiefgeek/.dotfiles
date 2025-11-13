@@ -19,6 +19,7 @@ vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 
 vim.opt.updatetime = 50
+vim.opt.colorcolumn = "110"
 
 -- How I think behavior should work naturally
 vim.api.nvim_set_keymap('v', '>', '>gv', { noremap = true })
