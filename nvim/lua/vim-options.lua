@@ -56,9 +56,9 @@ vim.keymap.set('n', '<leader>z', '<cmd>ZenMode<CR>', { desc = 'Toggle Zen Mode' 
 local opts = { noremap=true, silent=false }
 
 -- Open notes (uses Telescope, opens to the right)
-vim.keymap.set("n", "<leader>on", function()
+vim.keymap.set("n", "<leader>nn", function()
   vim.cmd("botright vnew")
-  vim.cmd("ZkNotes { sort = { 'modified' } }")
+  vim.cmd("ZkNew { title = '" .. title .. "' }")
 end, opts)
 
 -- Open notes associated with the selected tags (uses Telescope, opens to the right)
