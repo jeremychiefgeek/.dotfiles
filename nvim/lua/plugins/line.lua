@@ -11,7 +11,18 @@ return {
         sections = {
           lualine_a = {'mode'},
           lualine_b = {'branch'},
-          lualine_c = {'filename'},
+          lualine_c = {
+            'filename',
+            {
+              function()
+                if vim.bo.filetype == 'markdown' then
+                  local word_count = vim.fn.wordcount().words
+                  return 'word count: ' .. word_count
+                end
+                return ''
+              end,
+            }
+          },
           lualine_x = {'encoding', 'fileformat', 'filetype'},
           lualine_y = {'progress'},
           lualine_z = {'location'}
