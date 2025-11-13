@@ -57,6 +57,7 @@ local opts = { noremap=true, silent=false }
 
 -- Open notes (uses Telescope, opens to the right)
 vim.keymap.set("n", "<leader>nn", function()
+  local title = vim.fn.input('Title: ')
   vim.cmd("botright vnew")
   vim.cmd("ZkNew { title = '" .. title .. "' }")
 end, opts)
