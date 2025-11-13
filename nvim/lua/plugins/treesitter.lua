@@ -20,6 +20,7 @@ return {
           "cpp",
           "zig",
           "python",
+          "markdown"
         },
         highlight = { enable = true },
         indent = { enable = false },

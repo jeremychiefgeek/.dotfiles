@@ -53,3 +53,28 @@ end, { expr = true })
 -- ZEN
 vim.keymap.set('n', '<leader>z', '<cmd>ZenMode<CR>', { desc = 'Toggle Zen Mode' })
 
+local opts = { noremap=true, silent=false }
+
+-- Open notes (uses Telescope, opens to the right)
+vim.keymap.set("n", "<leader>on", function()
+  vim.cmd("botright vnew")
+  vim.cmd("ZkNotes { sort = { 'modified' } }")
+end, opts)
+
+-- Open notes associated with the selected tags (uses Telescope, opens to the right)
+vim.keymap.set("n", "<leader>tn", function()
+  vim.cmd("botright vnew")
+  vim.cmd("ZkTags")
+end, opts)
+
+-- Search for notes matching a given query (uses Telescope, opens to the right)
+vim.keymap.set("n", "<leader>fn", function()
+  vim.cmd("botright vnew")
+  vim.cmd("ZkNotes { sort = { 'modified' } }")
+end, opts)
+
+-- Search for notes matching the current visual selection (uses Telescope, opens to the right)
+vim.keymap.set("v", "<leader>fn", function()
+  vim.cmd("botright vnew")
+  vim.cmd("'<,'>ZkMatch")
+end, opts)
