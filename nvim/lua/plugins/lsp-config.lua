@@ -15,29 +15,21 @@ return {
   },
   {
     "neovim/nvim-lspconfig",
+    dependencies = { 'saghen/blink.cmp' },
     lazy = false,
-    config = function()
-      local cmp_nvim_lsp = require("cmp_nvim_lsp")
-      local capabilities = vim.tbl_deep_extend(
-        "force",
-        {},
-        vim.lsp.protocol.make_client_capabilities(),
-        cmp_nvim_lsp.default_capabilities()
-      )
-      
-      -- Use the new vim.lsp.config API
-      vim.lsp.config('tailwindcss', {
-        capabilities = capabilities,
-      })
-      
-      vim.lsp.config('lua_ls', {
-        capabilities = capabilities,
-      })
-      
-      -- Enable the LSP servers
-      vim.lsp.enable('tailwindcss')
-      vim.lsp.enable('lua_ls')
-      
+    opts = {
+      servers = {
+        lua_ls = {}
+      }
+    },
+    config = function(_, opts)
+      -- local lspconfig = require('lspconfig')
+      -- for server, config in pairs(opts.servers) do
+      --   -- passing config.capabilities to blink.cmp merges with the capabilities in your
+      --   -- `opts[server].capabilities, if you've defined it
+      --   config.capabilities = require('blink.cmp').get_lsp_capabilities(config.capabilities)
+      --   lspconfig[server].setup(config)
+      -- end
       -- Keymaps
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
       vim.keymap.set("n", "<leader>gd", vim.lsp.buf.definition, {})
@@ -45,6 +37,6 @@ return {
       vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
       vim.keymap.set("n", "<leader>gf", vim.lsp.buf.format, {})
       vim.keymap.set("n", "<space>rn", vim.lsp.buf.rename, {})
-    end,
+    end
   },
 }
