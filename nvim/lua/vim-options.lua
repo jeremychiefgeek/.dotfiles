@@ -1,3 +1,4 @@
+vim.opt.number = true
 vim.opt.relativenumber = true
 vim.cmd("set expandtab")
 vim.cmd("set tabstop=2")
@@ -59,24 +60,25 @@ local opts = { noremap=true, silent=false }
 -- Open notes (uses Telescope, opens to the right)
 vim.keymap.set("n", "<leader>nn", function()
   local title = vim.fn.input('Title: ')
-  vim.cmd("botright vnew")
   vim.cmd("ZkNew { title = '" .. title .. "' }")
+  vim.cmd("botright vnew")
 end, opts)
 
 -- Open notes associated with the selected tags (uses Telescope, opens to the right)
 vim.keymap.set("n", "<leader>tn", function()
-  vim.cmd("botright vnew")
   vim.cmd("ZkTags")
+  vim.cmd("botright vnew")
 end, opts)
 
 -- Search for notes matching a given query (uses Telescope, opens to the right)
 vim.keymap.set("n", "<leader>fn", function()
-  vim.cmd("botright vnew")
   vim.cmd("ZkNotes { sort = { 'modified' } }")
+  vim.cmd("botright vnew")
 end, opts)
 
 -- Search for notes matching the current visual selection (uses Telescope, opens to the right)
 vim.keymap.set("v", "<leader>fn", function()
-  vim.cmd("botright vnew")
   vim.cmd("'<,'>ZkMatch")
+  -- FIXME: These need to do it only if selected
+  vim.cmd("botright vnew")
 end, opts)
