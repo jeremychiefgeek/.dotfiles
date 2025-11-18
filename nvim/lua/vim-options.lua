@@ -82,3 +82,12 @@ vim.keymap.set("v", "<leader>fn", function()
   -- FIXME: These need to do it only if selected
   vim.cmd("botright vnew")
 end, opts)
+
+-- NOICE
+vim.keymap.set("n", "<leader>le", function()
+  require("noice").cmd("last")
+end)
+
+vim.keymap.set("n", "<leader>eh", function()
+  require("noice").cmd("history")
+end)
