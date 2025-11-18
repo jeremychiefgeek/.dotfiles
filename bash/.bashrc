@@ -5,3 +5,5 @@ export NVM_DIR="$HOME/.nvm"
 
 [ "$TERM" = "xterm-ghostty" ] && export TERM=xterm-256color
 . "$HOME/.cargo/env"
+
+export ZK_NOTEBOOK_DIR="$HOME/notebook"
