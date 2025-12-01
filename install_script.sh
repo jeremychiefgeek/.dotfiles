@@ -4,6 +4,10 @@
 DOTFILES=$HOME/.dotfiles
 BACKUP_DIR=$HOME/dotfiles-backup
 
+# Get the operating system name
+os_name=$(uname -s)
+echo $os_name
+
 echo "=============================="
 echo -e "\n\nBackup existing config ..."
 echo "=============================="
@@ -58,26 +62,25 @@ package_to_install="neovim
     tmux
 "
 
-echo "================================================="
-echo "Symlink zsh theme, tmux.conf, zshrc"
-echo "================================================="
-echo "Symlinking dotfiles"
-# ln -s -f $DOTFILES/bash/bashrc.symlink $HOME/.bashrc
-ln -s -f $DOTFILES/bash/.bash_profile $HOME/.bash_profile
-ln -s -f $DOTFILES/bash/.bashrc $HOME/.bashrc
-# mkdir -p $HOME/.config/borders
-# ln -s $DOTFILES/borders $HOME/.config/borders
-# mkdir -p $HOME/.config/aerospace
-# ln -s $DOTFILES/aerospace $HOME/.config/aerospace
-# mkdir -p $HOME/.config/sketchybar
-# ln -s $DOTFILES/sketchybar $HOME/.config/sketchybar
-# mkdir -p $HOME/.config/nvim
-ln -s $DOTFILES/nvim $HOME/.config/nvim
-# mkdir -p $HOME/.config/alacritty
-# ln -s $DOTFILES/alacritty $HOME/.config/alacritty
-ln -s $DOTFILES/starship/starship.toml $HOME/.config/starship.toml
-
-if uname -s | grep Darwin; then
+if [ "$(uname)" = "Darwin" ]; then
+	echo "================================================="
+	echo "Symlink zsh theme, tmux.conf, zshrc"
+	echo "================================================="
+	echo "Symlinking dotfiles"
+	# ln -s -f $DOTFILES/bash/bashrc.symlink $HOME/.bashrc
+	ln -s -f $DOTFILES/bash/.bash_profile $HOME/.bash_profile
+	ln -s -f $DOTFILES/bash/.bashrc $HOME/.bashrc
+	# mkdir -p $HOME/.config/borders
+	# ln -s $DOTFILES/borders $HOME/.config/borders
+	# mkdir -p $HOME/.config/aerospace
+	# ln -s $DOTFILES/aerospace $HOME/.config/aerospace
+	# mkdir -p $HOME/.config/sketchybar
+	# ln -s $DOTFILES/sketchybar $HOME/.config/sketchybar
+	# mkdir -p $HOME/.config/nvim
+	ln -s $DOTFILES/nvim $HOME/.config/nvim
+	# mkdir -p $HOME/.config/alacritty
+	# ln -s $DOTFILES/alacritty $HOME/.config/alacritty
+	ln -s $DOTFILES/starship/starship.toml $HOME/.config/starship.toml
   echo "================================================="
   echo "Installing packages $package_to_install on Mac OS"
   echo "================================================="
@@ -98,7 +101,27 @@ if uname -s | grep Darwin; then
   # brew services restart sketchybar
   brew install --cask dbeaver-community
   brew install --cask ghostty
-else
+elif [ "$(uname)" = "Linux" ]; then
+  echo "Installing packages for hyprland"
+  ./scripts/install_yay.sh
+  ./scripts/install_brave.sh
+  ./scripts/install_fonts.sh
+  ./scripts/install_lazygit.sh
+  ./scripts/install_pnpm.sh
+  ./scripts/install_ripgrep.sh
+  ./scripts/install_rust.sh
+  ./scripts/install_rust.sh
+  ./scripts/install_waybar.sh
+  ./scripts/install_zk.sh
+  ./scripts/install_neovim.sh
+  ./scripts/install_hyprpaper.sh
+  echo "Linking config files"
+  rm -rf ~/.config/hypr && ln -s ~/.dotfiles/hypr/ ~/.config/hypr
+  rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
+  ln -s ~/.dotfiles/background/ ~/.config/backgrounds
+  ln -s ~/.dotfiles/waybar/ ~/.config/waybar
+  ln -s ~/.dotfiles/zk/ ~/.config/zk
+else 
   echo "OS NOT DETECTED, couldn't install package $package_to_install"
   exit 1
 fi
