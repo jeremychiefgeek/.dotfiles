@@ -115,6 +115,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_zk.sh
   ./scripts/install_neovim.sh
   ./scripts/install_hyprpaper.sh
+  ./scripts/install_hyprlock.sh
   echo "Linking config files"
   rm -rf ~/.config/hypr && ln -s ~/.dotfiles/hypr/ ~/.config/hypr
   rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
