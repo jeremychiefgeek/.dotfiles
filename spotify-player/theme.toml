@@ -1,0 +1,25 @@
+[[themes]]
+name = "compline"
+
+[themes.palette]
+background = "#1a1d21"      # bg
+foreground = "#f0efeb"      # fg
+
+black        = "#0f1114"    # base0
+red          = "#cdacac"    # red
+green        = "#b8c4b8"    # green
+yellow       = "#d4ccb4"    # yellow
+blue         = "#b4bcc4"    # blue
+magenta      = "#ccc4b4"    # orange used as warm accent
+cyan         = "#b4c0c8"    # cyan
+white        = "#e0dcd4"    # base8
+
+bright_black   = "#3d424a"  # base4
+bright_red     = "#cdacac"  # same as red (palette is very muted)
+bright_green   = "#b8c4b8"  # same as green
+bright_yellow  = "#d4ccb4"  # same as yellow
+bright_blue    = "#b4bcc4"  # same as blue
+bright_magenta = "#f0efeb"  # use fg as bright warm highlight
+bright_cyan    = "#b4c0c8"  # same as cyan
+bright_white   = "#f0efeb"  # fg
+

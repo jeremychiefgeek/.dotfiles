@@ -121,8 +121,12 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_spotify.sh
 
   echo "Linking config files"
+  rm  ~/.bashrc && ln -s ~/.dotfiles/bash/.bashrc ~/.bashrc
+  rm  ~/.bash_profile && ln -s ~/.dotfiles/bash/.bash_profile ~/.bash_profile
   rm -rf ~/.config/hypr && ln -s ~/.dotfiles/hypr/ ~/.config/hypr
   rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
+  rm -rf ~/.config/spotify-player && ln -s ~/.dotfiles/spotify-player/ ~/.config/spotify-player
+
   ln -s ~/.dotfiles/background/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
   ln -s ~/.dotfiles/zk/ ~/.config/zk
