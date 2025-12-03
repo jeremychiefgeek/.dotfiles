@@ -64,7 +64,6 @@ return {
           "codelldb",
           "coreclr",
           "python",
-          "node2",
         },
         automatic_installation = true,
         handlers = {},
