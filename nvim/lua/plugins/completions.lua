@@ -1,130 +1,117 @@
-return {{
-  'saghen/blink.nvim',
-  build = 'cargo build --release', -- for delimiters
-  keys = {
-	-- chartoggle
-	{
-	  '<C-;>',
-	  function()
-	  	require('blink.chartoggle').toggle_char_eol(';')
-	  end,
-	  mode = { 'n', 'v' },
-	  desc = 'Toggle ; at eol',
-	},
-	{
-	  ',',
-	  function()
-	  	require('blink.chartoggle').toggle_char_eol(',')
-	  end,
-	  mode = { 'n', 'v' },
-	  desc = 'Toggle , at eol',
-	},
-
-	-- tree
-	{ '<C-e>', '<cmd>BlinkTree reveal<cr>', desc = 'Reveal current file in tree' },
-	{ '<leader>E', '<cmd>BlinkTree toggle<cr>', desc = 'Reveal current file in tree' },
-	{ '<leader>e', '<cmd>BlinkTree toggle-focus<cr>', desc = 'Toggle file tree focus' },
-  },
-  -- all modules handle lazy loading internally
-  lazy = false,
-  opts = {
-    chartoggle = { enabled = true },
-    tree = { enabled = true }
-  }
-},
--- Autocompletion
+return {
   {
     "saghen/blink.cmp",
     event = "InsertEnter",
-    version = "1.*",
-    dependencies = {
-      -- Snippet Engine
-      {
-        "L3MON4D3/LuaSnip",
-        version = "2.*",
-        build = (function()
-          -- Build Step is needed for regex support in snippets.
-          -- This step is not supported in many windows environments.
-          -- Remove the below condition to re-enable on windows.
-          if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
-            return
-          end
-          return "make install_jsregexp"
-        end)(),
-        dependencies = {
-          -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          {
-            "rafamadriz/friendly-snippets",
-            config = function()
-              require("luasnip.loaders.from_vscode").lazy_load()
-            end,
-          },
-        },
-        opts = {},
-      },
-      "folke/lazydev.nvim",
-      "moyiz/blink-emoji.nvim",
-      "MahanRahmati/blink-nerdfont.nvim",
-    },
-    --- @module 'blink.cmp'
-    --- @type blink.cmp.Config
-    opts = {
-    keymap = {
-      preset = "default",
-      ["<CR>"] = { "accept", "fallback" },
-      ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
-      ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
-    },
-      appearance = {
-        -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-        -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = "mono",
-      },
+    version = "v0.*", -- REQUIRED `tag` needed to download pre-built binary
 
-      completion = {
-        -- By default, you may press `<c-space>` to show the documentation.
-        -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = true, auto_show_delay_ms = 500 },
-        ghost_text = { enabled = true },
-        menu = {
-          draw = {
-            columns = { { "kind_icon" }, { "label", "label_description", gap = 1 }, { "source_name" } },
-            components = {
-              source_name = {
-                width = { max = 30 },
-                text = function(ctx)
-                  return "[" .. ctx.source_name .. "]"
-                end,
-                highlight = "BlinkCmpSource",
-              },
-            },
-          },
-        },
+    opts = {
+      highlight = {
+        -- supporting themes: tokyonight
+        -- not supported: nightfox
+        use_nvim_cmp_as_default = true,
       },
       sources = {
-        default = { "lsp", "buffer", "path", "snippets", "lazydev", "emoji", "nerdfont" },
+        sources = {
+          default = { "lsp", "path", "snippets", "buffer" },
+        },
+        -- completion = {
+        --   enabled_providers = { "lsp", "path", "snippets", "buffer" },
+        -- },
         providers = {
-          lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
-          emoji = { module = "blink-emoji", score_offset = 15 },
-          nerdfont = { module = "blink-nerdfont", score_offset = 15 },
+          lsp = {
+            fallbacks = { "snippets", "buffer" },
+          },
+          snippets = {
+            min_keyword_length = 1, -- don't show when triggered manually, useful for JSON keys
+            score_offset = -1,
+          },
+          path = {
+            opts = { get_cwd = vim.uv.cwd },
+          },
+          buffer = {
+            -- fallback_for = {}, -- disable being fallback for LSP
+            max_items = 4,
+            min_keyword_length = 4,
+            score_offset = -3,
+          },
         },
       },
+      keymap = {
+        ["<D-c>"] = { "show" },
+        ["<S-CR>"] = { "hide" },
+        ["<CR>"] = { "select_and_accept", "fallback" },
+        ["<Tab>"] = { "select_next", "fallback" },
+        ["<S-Tab>"] = { "select_prev", "fallback" },
+        ["<Down>"] = { "select_next", "fallback" },
+        ["<Up>"] = { "select_prev", "fallback" },
+        ["<PageDown>"] = { "scroll_documentation_down" },
+        ["<PageUp>"] = { "scroll_documentation_up" },
+      },
+      windows = {
+        documentation = {
+          border = vim.g.borderStyle,
+          min_width = 15,
+          max_width = 45, -- smaller, due to https://github.com/Saghen/blink.cmp/issues/194
+          max_height = 10,
+          auto_show = true,
+          auto_show_delay_ms = 250,
+        },
+        autocomplete = {
+          border = vim.g.borderStyle,
+          min_width = 10, -- max_width controlled by draw-function
+          max_height = 10,
+          cycle = { from_top = false }, -- cycle at bottom, but not at the top
+          draw = function(ctx)
+            -- https://github.com/Saghen/blink.cmp/blob/9846c2d2bfdeaa3088c9c0143030524402fffdf9/lua/blink/cmp/types.lua#L1-L6
+            -- https://github.com/Saghen/blink.cmp/blob/9846c2d2bfdeaa3088c9c0143030524402fffdf9/lua/blink/cmp/windows/autocomplete.lua#L298-L349
+            -- differentiate LSP snippets from user snippets and emmet snippets
+            local source, client = ctx.item.source_id, ctx.item.client_id
+            if client and vim.lsp.get_client_by_id(client).name == "emmet_language_server" then
+              source = "emmet"
+            end
 
-      snippets = { preset = "luasnip" },
+            local sourceIcons = { snippets = "󰩫", buffer = "󰦨", emmet = "" }
+            local icon = sourceIcons[source] or ctx.kind_icon
 
-      -- Blink.cmp includes an optional, rbcommended rust fuzzy matcher,
-      -- which automatically downloads a prebuilt binary when enabled.
-      --
-      -- By default, we use the Lua implementation instead, but you may enable
-      -- the rust implementation via `'prefer_rust_with_warning'`
-      --
-      -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = "lua" },
-
-      -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true },
+            return {
+              {
+                " " .. ctx.item.label .. " ",
+                fill = true,
+                hl_group = ctx.deprecated and "BlinkCmpLabelDeprecated" or "BlinkCmpLabel",
+                max_width = 40,
+              },
+              { icon .. " ", hl_group = "BlinkCmpKind" .. ctx.kind },
+            }
+          end,
+        },
+      },
+      kind_icons = {
+        Text = "",
+        Method = "󰊕",
+        Function = "󰊕",
+        Constructor = "",
+        Field = "󰇽",
+        Variable = "󰂡",
+        Class = "󰜁",
+        Interface = "",
+        Module = "",
+        Property = "󰜢",
+        Unit = "",
+        Value = "󰎠",
+        Enum = "",
+        Keyword = "󰌋",
+        Snippet = "󰒕",
+        Color = "󰏘",
+        Reference = "",
+        File = "",
+        Folder = "󰉋",
+        EnumMember = "",
+        Constant = "󰏿",
+        Struct = "",
+        Event = "",
+        Operator = "󰆕",
+        TypeParameter = "󰅲",
+      },
     },
-  }
+  },
 }
