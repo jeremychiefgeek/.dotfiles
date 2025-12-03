@@ -110,7 +110,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_pnpm.sh
   ./scripts/install_ripgrep.sh
   ./scripts/install_rust.sh
-  ./scripts/install_rust.sh
+  ./scripts/install_dotnet.sh
   ./scripts/install_waybar.sh
   ./scripts/install_zk.sh
   ./scripts/install_neovim.sh
