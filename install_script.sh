@@ -104,18 +104,22 @@ if [ "$(uname)" = "Darwin" ]; then
 elif [ "$(uname)" = "Linux" ]; then
   echo "Installing packages for hyprland"
   ./scripts/install_yay.sh
-  ./scripts/install_brave.sh
   ./scripts/install_fonts.sh
-  ./scripts/install_lazygit.sh
   ./scripts/install_pnpm.sh
   ./scripts/install_ripgrep.sh
   ./scripts/install_rust.sh
   ./scripts/install_dotnet.sh
   ./scripts/install_waybar.sh
-  ./scripts/install_zk.sh
-  ./scripts/install_neovim.sh
   ./scripts/install_hyprpaper.sh
   ./scripts/install_hyprlock.sh
+
+  echo "Installing TUI and Applications"
+  ./scripts/install_brave.sh
+  ./scripts/install_lazygit.sh
+  ./scripts/install_zk.sh
+  ./scripts/install_neovim.sh
+  ./scripts/install_spotify.sh
+
   echo "Linking config files"
   rm -rf ~/.config/hypr && ln -s ~/.dotfiles/hypr/ ~/.config/hypr
   rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
