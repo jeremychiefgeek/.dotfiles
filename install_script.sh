@@ -119,6 +119,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_zk.sh
   ./scripts/install_neovim.sh
   ./scripts/install_spotify.sh
+  ./scripts/install_btop.sh
 
   echo "Linking config files"
   rm  ~/.bashrc && ln -s ~/.dotfiles/bash/.bashrc ~/.bashrc
@@ -126,6 +127,7 @@ elif [ "$(uname)" = "Linux" ]; then
   rm -rf ~/.config/hypr && ln -s ~/.dotfiles/hypr/ ~/.config/hypr
   rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
   rm -rf ~/.config/spotify-player && ln -s ~/.dotfiles/spotify-player/ ~/.config/spotify-player
+  rm -rf ~/.config/btop && ln -s ~/.dotfiles/btop/ ~/.config/btop
 
   ln -s ~/.dotfiles/background/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
