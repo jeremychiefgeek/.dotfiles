@@ -3,17 +3,12 @@ return {
     "saghen/blink.cmp",
     dependencies = { "onsails/lspkind.nvim" },
     event = "InsertEnter",
-    version = "v0.*", -- prebuilt binaries
+    version = "v0.*",
 
-    ---@module 'blink.cmp'
-    ---@type blink.cmp.Config
     opts = {
       appearance = {
-        -- use nvim-cmp highlight groups as fallback
         use_nvim_cmp_as_default = true,
         nerd_font_variant = "mono",
-
-        -- your custom icons
         kind_icons = {
           Text = "󰊄",
           Method = "󰊕",
@@ -43,24 +38,18 @@ return {
         },
       },
 
-      -- NOTE: sources.default is the correct shape
       sources = {
         default = { "lsp", "path", "snippets", "buffer" },
         providers = {
           lsp = {
             fallbacks = { "snippets", "buffer" },
           },
-          snippets = {
-            min_keyword_length = 1,
-            score_offset = -1,
-          },
-          path = {
-            opts = { get_cwd = vim.uv.cwd },
-          },
+          snippets = { min_keyword_length = 1, score_offset = -1 },
+          path = { opts = { get_cwd = vim.uv.cwd } },
           buffer = {
             max_items = 4,
-            min_keyword_length = 4,
-            score_offset = -3,
+            min_keyword_length = 5, -- slightly less noisy
+            score_offset = -4,
           },
         },
       },
@@ -77,46 +66,101 @@ return {
         ["<PageUp>"] = { "scroll_documentation_up" },
       },
 
-      -- this replaces your old `windows` block
       completion = {
         documentation = {
           auto_show = true,
           auto_show_delay_ms = 250,
-          window = {
-            border = vim.g.borderStyle,
-          },
+          window = { border = vim.g.borderStyle },
         },
 
         menu = {
           border = vim.g.borderStyle,
 
-          -- ported version of your custom draw logic:
-          -- change icon based on source/emmet
-          draw = {
-            components = {
-              kind_icon = {
-                text = function(ctx)
-                  local source = ctx.item.source_id
-                  local client = ctx.item.client_id
+          draw = (function()
+            local function trunc(s, max)
+              if not s or s == "" then
+                return ""
+              end
+              s = tostring(s)
+              if #s <= max then
+                return s
+              end
+              return s:sub(1, max - 1) .. "…"
+            end
 
-                  if client then
-                    local client_obj = vim.lsp.get_client_by_id(client)
-                    if client_obj and client_obj.name == "emmet_language_server" then
-                      source = "emmet"
+            local function resolve_source(ctx)
+              local source = ctx.item.source_id
+              local client = ctx.item.client_id
+
+              if client then
+                local client_obj = vim.lsp.get_client_by_id(client)
+                if client_obj and client_obj.name == "emmet_language_server" then
+                  source = "emmet"
+                end
+              end
+
+              return source
+            end
+
+            local source_badges = {
+              lsp = "LSP",
+              snippets = "SNIP",
+              buffer = "BUF",
+              path = "PATH",
+              emmet = "EMMET",
+            }
+
+            local source_icons = {
+              snippets = "󰩫",
+              buffer = "󰦨",
+              emmet = "",
+              path = "",
+              lsp = "󰘦",
+            }
+
+            return {
+              -- If you want the menu to have more “columns”, you do it via components.
+              -- The order below is left→right.
+              components = {
+                kind_icon = {
+                  text = function(ctx)
+                    local src = resolve_source(ctx)
+                    return source_icons[src] or ctx.kind_icon
+                  end,
+                },
+
+                label = {
+                  text = function(ctx)
+                    return trunc(ctx.label, 42)
+                  end,
+                },
+
+                -- Shows function signature / type / snippet detail when available
+                detail = {
+                  text = function(ctx)
+                    -- Blink items typically expose `detail` (LSP CompletionItem.detail)
+                    local d = ctx.item.detail or ""
+                    if d == "" then
+                      return ""
                     end
-                  end
+                    return "  " .. trunc(d, 32)
+                  end,
+                },
 
-                  local sourceIcons = {
-                    snippets = "󰩫",
-                    buffer = "󰦨",
-                    emmet = "",
-                  }
-
-                  return sourceIcons[source] or ctx.kind_icon
-                end,
+                -- Right-side source badge so you instantly know where it came from
+                source = {
+                  text = function(ctx)
+                    local src = resolve_source(ctx)
+                    local badge = source_badges[src] or (src and src:upper() or "")
+                    if badge == "" then
+                      return ""
+                    end
+                    return "  [" .. badge .. "]"
+                  end,
+                },
               },
-            },
-          },
+            }
+          end)(),
         },
       },
     },
