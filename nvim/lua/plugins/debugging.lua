@@ -9,6 +9,7 @@ return {
         "clang-format",
         "prettier",
         "vue-language-server",
+        "typescript-language-server",
         "vtsls",
         "zls",
         "ols",
