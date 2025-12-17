@@ -24,43 +24,43 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 
 -- How I think behavior should work naturally
-vim.api.nvim_set_keymap('v', '>', '>gv', { noremap = true })
-vim.api.nvim_set_keymap('v', '<', '<gv', { noremap = true })
+vim.api.nvim_set_keymap("v", ">", ">gv", { noremap = true })
+vim.api.nvim_set_keymap("v", "<", "<gv", { noremap = true })
 
 -- Window pane management
-vim.keymap.set('n', '<leader>wv', '<C-w>v', { desc = 'Split window vertically' })
-vim.keymap.set('n', '<leader>wh', '<C-w>s', { desc = 'Split window horizontally' })
-vim.keymap.set('n', '<leader>we', '<C-w>=', { desc = 'Make splits equal size' })
-vim.keymap.set('n', '<leader>wc', '<cmd>close<CR>', { desc = 'Close current split' })
-vim.keymap.set('n', '<leader>wo', '<C-w>o', { desc = 'Close all other splits' })
+vim.keymap.set("n", "<leader>wv", "<C-w>v", { desc = "Split window vertically" })
+vim.keymap.set("n", "<leader>wh", "<C-w>s", { desc = "Split window horizontally" })
+vim.keymap.set("n", "<leader>we", "<C-w>=", { desc = "Make splits equal size" })
+vim.keymap.set("n", "<leader>wc", "<cmd>close<CR>", { desc = "Close current split" })
+vim.keymap.set("n", "<leader>wo", "<C-w>o", { desc = "Close all other splits" })
 
 -- Resize with arrows
-vim.keymap.set('n', '<C-Up>', '<cmd>resize +2<CR>', { desc = 'Increase window height' })
-vim.keymap.set('n', '<C-Down>', '<cmd>resize -2<CR>', { desc = 'Decrease window height' })
-vim.keymap.set('n', '<C-Left>', '<cmd>vertical resize -2<CR>', { desc = 'Decrease window width' })
-vim.keymap.set('n', '<C-Right>', '<cmd>vertical resize +2<CR>', { desc = 'Increase window width' })
+vim.keymap.set("n", "<C-Up>", "<cmd>resize +2<CR>", { desc = "Increase window height" })
+vim.keymap.set("n", "<C-Down>", "<cmd>resize -2<CR>", { desc = "Decrease window height" })
+vim.keymap.set("n", "<C-Left>", "<cmd>vertical resize -2<CR>", { desc = "Decrease window width" })
+vim.keymap.set("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Increase window width" })
 
 -- Tab management
-vim.keymap.set('n', '<leader>to', '<cmd>tabnew<CR>', { desc = 'Open new tab' })
-vim.keymap.set('n', '<leader>tc', '<cmd>tabclose<CR>', { desc = 'Close current tab' })
-vim.keymap.set('n', '<leader>tn', '<cmd>tabn<CR>', { desc = 'Go to next tab' })
-vim.keymap.set('n', '<leader>tp', '<cmd>tabp<CR>', { desc = 'Go to previous tab' })
-vim.keymap.set('n', '<leader>tf', '<cmd>tabnew %<CR>', { desc = 'Open current buffer in new tab' })
+vim.keymap.set("n", "<leader>to", "<cmd>tabnew<CR>", { desc = "Open new tab" })
+vim.keymap.set("n", "<leader>tc", "<cmd>tabclose<CR>", { desc = "Close current tab" })
+vim.keymap.set("n", "<leader>tn", "<cmd>tabn<CR>", { desc = "Go to next tab" })
+vim.keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" })
+vim.keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" })
 
 -- This centers code: Rember your posture
-vim.keymap.set('n', 'zz', function()
+vim.keymap.set("n", "zz", function()
   local offset = math.floor(vim.fn.winheight(0) / 4)
-  return 'zt' .. offset .. '<C-y>'
+  return "zt" .. offset .. "<C-y>"
 end, { expr = true })
 
 -- ZEN
-vim.keymap.set('n', '<leader>z', '<cmd>ZenMode<CR>', { desc = 'Toggle Zen Mode' })
+vim.keymap.set("n", "<leader>z", "<cmd>ZenMode<CR>", { desc = "Toggle Zen Mode" })
 
-local opts = { noremap=true, silent=false }
+local opts = { noremap = true, silent = false }
 
 -- Open notes (uses Telescope, opens to the right)
 vim.keymap.set("n", "<leader>nn", function()
-  local title = vim.fn.input('Title: ')
+  local title = vim.fn.input("Title: ")
   vim.cmd("ZkNew { title = '" .. title .. "' }")
 end, opts)
 
@@ -90,116 +90,115 @@ vim.keymap.set("n", "<leader>eh", function()
 end)
 
 -- Debugger
-vim.keymap.set("n", 
-      "<leader>dt",
-      function()
-          require("dap").toggle_breakpoint()
-      end,
-      {
-      desc = "Toggle Breakpoint",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>dc",
-      function()
-          require("dap").continue()
-      end,
-      {
-      desc = "Continue",
-      nowait = true,
-      remap = false,
-     } 
-    )
-vim.keymap.set("n", 
-      "<leader>di",
-      function()
-          require("dap").step_into()
-      end,
-      {
-      desc = "Step Into",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>do",
-      function()
-          require("dap").step_over()
-      end,
-      {
-      desc = "Step Over",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>du",
-      function()
-          require("dap").step_out()
-      end,
-      {
-      desc = "Step Out",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>dr",
-      function()
-          require("dap").repl.open()
-      end,
-      {
-      desc = "Open REPL",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>dl",
-      function()
-          require("dap").run_last()
-      end,
-      {
-      desc = "Run Last",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>dq",
-      function()
-          require("dap").terminate()
-          require("dapui").close()
-          require("nvim-dap-virtual-text").toggle()
-      end,
-      {
-      desc = "Terminate",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>db",
-      function()
-          require("dap").list_breakpoints()
-      end,
-      {
-      desc = "List Breakpoints",
-      nowait = true,
-      remap = false,
-      }
-    )
-vim.keymap.set("n", 
-      "<leader>de",
-      function()
-          require("dap").set_exception_breakpoints({ "all" })
-      end,
-      {
-      desc = "Set Exception Breakpoints",
-      nowait = true,
-      remap = false,
-      }
-    )
-
+-- vim.keymap.set("n",
+--       "<leader>dt",
+--       function()
+--           require("dap").toggle_breakpoint()
+--       end,
+--       {
+--       desc = "Toggle Breakpoint",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>dc",
+--       function()
+--           require("dap").continue()
+--       end,
+--       {
+--       desc = "Continue",
+--       nowait = true,
+--       remap = false,
+--      }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>di",
+--       function()
+--           require("dap").step_into()
+--       end,
+--       {
+--       desc = "Step Into",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>do",
+--       function()
+--           require("dap").step_over()
+--       end,
+--       {
+--       desc = "Step Over",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>du",
+--       function()
+--           require("dap").step_out()
+--       end,
+--       {
+--       desc = "Step Out",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>dr",
+--       function()
+--           require("dap").repl.open()
+--       end,
+--       {
+--       desc = "Open REPL",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>dl",
+--       function()
+--           require("dap").run_last()
+--       end,
+--       {
+--       desc = "Run Last",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>dq",
+--       function()
+--           require("dap").terminate()
+--           require("dapui").close()
+--           require("nvim-dap-virtual-text").toggle()
+--       end,
+--       {
+--       desc = "Terminate",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>db",
+--       function()
+--           require("dap").list_breakpoints()
+--       end,
+--       {
+--       desc = "List Breakpoints",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
+-- vim.keymap.set("n",
+--       "<leader>de",
+--       function()
+--           require("dap").set_exception_breakpoints({ "all" })
+--       end,
+--       {
+--       desc = "Set Exception Breakpoints",
+--       nowait = true,
+--       remap = false,
+--       }
+--     )
