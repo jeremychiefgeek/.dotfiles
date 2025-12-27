@@ -104,6 +104,7 @@ if [ "$(uname)" = "Darwin" ]; then
 elif [ "$(uname)" = "Linux" ]; then
 
   echo "Installing dev packages" 
+  ./scripts/install_utils.sh
   ./scripts/install_rust.sh
   ./scripts/install_dotnet.sh
   ./scripts/install_node.sh
@@ -117,14 +118,6 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_hyprpaper.sh
   ./scripts/install_hyprlock.sh
 
-  echo "Installing TUI and Applications"
-  ./scripts/install_brave.sh
-  ./scripts/install_lazygit.sh
-  ./scripts/install_zk.sh
-  ./scripts/install_neovim.sh
-  ./scripts/install_spotify.sh
-  ./scripts/install_btop.sh
-
   echo "Linking config files"
   rm  ~/.bashrc && ln -s ~/.dotfiles/bash/.bashrc ~/.bashrc
   rm  ~/.bash_profile && ln -s ~/.dotfiles/bash/.bash_profile ~/.bash_profile
@@ -136,6 +129,16 @@ elif [ "$(uname)" = "Linux" ]; then
   ln -s ~/.dotfiles/background/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
   ln -s ~/.dotfiles/zk/ ~/.config/zk
+
+  source ~/.bashrc
+
+  echo "Installing TUI and Applications"
+  ./scripts/install_brave.sh
+  ./scripts/install_lazygit.sh
+  ./scripts/install_zk.sh
+  ./scripts/install_neovim.sh
+  ./scripts/install_spotify.sh
+  ./scripts/install_btop.sh
 else 
   echo "OS NOT DETECTED, couldn't install package $package_to_install"
   exit 1
