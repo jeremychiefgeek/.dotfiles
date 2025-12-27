@@ -116,6 +116,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_ripgrep.sh
   ./scripts/install_waybar.sh
   ./scripts/install_hyprpaper.sh
+  ./scripts/install_hypridle.sh
   ./scripts/install_hyprlock.sh
 
   echo "Linking config files"
