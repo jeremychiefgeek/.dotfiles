@@ -126,6 +126,7 @@ elif [ "$(uname)" = "Linux" ]; then
   rm -rf ~/.config/nvim && ln -s ~/.dotfiles/nvim/ ~/.config/nvim
   rm -rf ~/.config/spotify-player && ln -s ~/.dotfiles/spotify-player/ ~/.config/spotify-player
   rm -rf ~/.config/btop && ln -s ~/.dotfiles/btop/ ~/.config/btop
+  rm -rf ~/.config/kitty && ln -s ~/.dotfiles/kitty/ ~/.config/kitty
 
   ln -s ~/.dotfiles/background/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
