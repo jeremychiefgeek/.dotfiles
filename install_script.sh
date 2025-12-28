@@ -102,13 +102,13 @@ if [ "$(uname)" = "Darwin" ]; then
   brew install --cask dbeaver-community
   brew install --cask ghostty
 elif [ "$(uname)" = "Linux" ]; then
+  mkdir ~/.nvm
 
   echo "Installing dev packages" 
   ./scripts/install_utils.sh
   ./scripts/install_rust.sh
   ./scripts/install_dotnet.sh
   ./scripts/install_node.sh
-  ./scripts/install_pnpm.sh
 
   echo "Installing packages for hyprland"
   ./scripts/install_yay.sh
@@ -135,6 +135,7 @@ elif [ "$(uname)" = "Linux" ]; then
   source ~/.bashrc
 
   echo "Installing TUI and Applications"
+  ./scripts/install_pnpm.sh
   ./scripts/install_brave.sh
   ./scripts/install_lazygit.sh
   ./scripts/install_zk.sh

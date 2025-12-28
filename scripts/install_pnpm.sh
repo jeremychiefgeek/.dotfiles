@@ -1,3 +1,4 @@
 #!/bin/sh
 
-npm install -g pnpm@latest-10
+nvm install --lts
+npm install -g pnpm@latest
