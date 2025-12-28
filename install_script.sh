@@ -128,7 +128,7 @@ elif [ "$(uname)" = "Linux" ]; then
   rm -rf ~/.config/btop && ln -s ~/.dotfiles/btop/ ~/.config/btop
   rm -rf ~/.config/kitty && ln -s ~/.dotfiles/kitty/ ~/.config/kitty
 
-  ln -s ~/.dotfiles/background/ ~/.config/backgrounds
+  ln -s ~/.dotfiles/backgrounds/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
   ln -s ~/.dotfiles/zk/ ~/.config/zk
   sudo ln -s ~/.dotfiles/sddm/ ~/usr/lib/sddm
