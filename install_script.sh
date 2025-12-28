@@ -131,6 +131,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ln -s ~/.dotfiles/background/ ~/.config/backgrounds
   ln -s ~/.dotfiles/waybar/ ~/.config/waybar
   ln -s ~/.dotfiles/zk/ ~/.config/zk
+  sudo ln -s ~/.dotfiles/sddm/ ~/usr/lib/sddm
 
   source ~/.bashrc
 
