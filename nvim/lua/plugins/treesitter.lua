@@ -1,12 +1,57 @@
+-- return {
+--   {
+--     "nvim-treesitter/nvim-treesitter",
+--     build = ":TSUpdate",
+--     branch = "master",
+--     lazy = false,
+--     config = function()
+--       local config = require("nvim-treesitter")
+--       config.setup({
+--         auto_install = true,
+--         ensure_installed = {
+--           "bash",
+--           "html",
+--           "css",
+--           "scss",
+--           "javascript",
+--           "typescript",
+--           "json",
+--           "lua",
+--           "c_sharp",
+--           "c",
+--           "cpp",
+--           "zig",
+--           "python",
+--           "markdown",
+--         },
+--         highlight = { enable = true },
+--         indent = { enable = false },
+--       })
+--     end,
+--   },
+-- }
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    lazy = false,
+    priority = 1000,
     build = ":TSUpdate",
+
     config = function()
-      local config = require("nvim-treesitter.configs")
-      config.setup({
-        auto_install = true,
-        ensure_installed = {
+      -- New rewrite entrypoint
+      require("nvim-treesitter").setup({})
+
+      -- Enable Treesitter highlighting per-buffer
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "*",
+        callback = function()
+          pcall(vim.treesitter.start)
+        end,
+      })
+
+      -- Optional helper: run this only when YOU want to install/update parsers
+      vim.api.nvim_create_user_command("TSEnsure", function()
+        require("nvim-treesitter").install({
           "bash",
           "html",
           "css",
@@ -20,11 +65,13 @@ return {
           "cpp",
           "zig",
           "python",
-          "markdown"
-        },
-        highlight = { enable = true },
-        indent = { enable = false },
-      })
+          "markdown",
+          "markdown_inline",
+          "vim",
+          "vimdoc",
+        })
+      end, { desc = "Install/update configured Treesitter parsers" })
     end,
   },
 }
+
