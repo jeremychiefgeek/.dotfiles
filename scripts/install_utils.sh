@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sudo pacman -S unzip pacman-contrib rofi jq
+sudo pacman -S unzip pacman-contrib rofi jq fastfetch
 
