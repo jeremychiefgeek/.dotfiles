@@ -133,6 +133,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ln -s ~/.dotfiles/zk/ ~/.config/zk
   ln -s ~/.dotfiles/rofi/ ~/.config/rofi
   ln -s ~/.dotfiles/spotify/ ~/.config/spotify
+  ln -s ~/.dotfiles/aerc/ ~/.config/aerc
   sudo ln -s ~/.dotfiles/sddm/ ~/usr/lib/sddm
 
   source ~/.bashrc
@@ -145,6 +146,7 @@ elif [ "$(uname)" = "Linux" ]; then
   ./scripts/install_neovim.sh
   ./scripts/install_spotify.sh
   ./scripts/install_btop.sh
+  ./scripts/install_email.sh
 else 
   echo "OS NOT DETECTED, couldn't install package $package_to_install"
   exit 1
