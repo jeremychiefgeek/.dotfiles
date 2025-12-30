@@ -3,6 +3,8 @@
 
 [Windows looking waybar for gaming pc](https://github.com/Harsh-bin/waybar-config)
 
+move: C:\Users\jcehe\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+
 
 # aerc Gmail OAuth2 Setup
 
