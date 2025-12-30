@@ -6,4 +6,7 @@ export NVM_DIR="$HOME/.nvm"
 . "$HOME/.cargo/env"
 
 export ZK_NOTEBOOK_DIR="$HOME/notebook"
+# XDG base directories
+export XDG_CONFIG_HOME="$HOME/.config"
+
 
