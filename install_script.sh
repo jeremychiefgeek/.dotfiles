@@ -60,6 +60,7 @@ package_to_install="neovim
     jq
     gh
     tmux
+    wget
 "
 
 if [ "$(uname)" = "Darwin" ]; then

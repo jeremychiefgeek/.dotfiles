@@ -47,6 +47,20 @@ paths = ["journal/weekly", "journal/daily"]
 filename = "{{format-date now}}"
 
 
+# ✅ Meetings: separate group, separate folder
+[group.meetings]
+paths = ["meetings"]
+
+[group.meetings.note]
+template = "meeting.md"
+# Keep your existing naming convention to avoid surprises:
+filename = "{{format-date now}}-{{id}}-{{slug title}}"
+
+[group.meetings.extra]
+author = "Jeremy Evans"
+
+
+
 # MARKDOWN SETTINGS
 [format.markdown]
 # Enable support for #hashtags
@@ -88,6 +102,11 @@ lucky = "zk list --quiet --format full --sort random --limit 1"
 
 # update zk notes
 update = "cd $ZK_NOTEBOOK_DIR; git add -A; git commit -am 'updating'; git push; cd -"
+
+# Meetings
+mtg = "zk new meetings --title \"$*\""
+mtgs = "--match 'type: meeting'"
+
 
 # LSP (EDITOR INTEGRATION)
 [lsp]

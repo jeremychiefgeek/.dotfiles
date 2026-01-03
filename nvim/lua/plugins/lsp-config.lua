@@ -12,6 +12,11 @@ return {
     "neovim/nvim-lspconfig",
     dependencies = { "saghen/blink.cmp" },
     lazy = false,
+    opts = {
+      servers = {
+        roslyn = {},
+      },
+    },
     config = function()
       -- capabilities (blink.cmp)
       local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -47,6 +52,19 @@ return {
         },
       })
 
+      -- Roslyn (C#)
+      vim.lsp.config("roslyn", {
+        on_attach = function()
+          print("This will run when the server attaches!")
+        end,
+        settings = {
+          ["csharp|inlay_hints"] = {
+            csharp_enable_inlay_hints_for_implicit_object_creation = true,
+            csharp_enable_inlay_hints_for_implicit_variable_types = true,
+          },
+        },
+      })
+
       -- vue-language-server (Volar)
       vim.lsp.config("vue_ls", {
         capabilities = capabilities,
@@ -63,7 +81,7 @@ return {
       })
 
       -- enable servers
-      vim.lsp.enable({ "vtsls", "vue_ls", "lua_ls" })
+      vim.lsp.enable({ "vtsls", "vue_ls", "lua_ls", "roslyn" })
 
       -- keymaps
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})

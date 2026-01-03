@@ -5,6 +5,7 @@ vim.cmd("set tabstop=2")
 vim.cmd("set softtabstop=2")
 vim.cmd("set shiftwidth=2")
 vim.g.mapleader = " "
+vim.opt.clipboard = "unnamedplus"
 
 vim.opt.swapfile = false
 
@@ -74,9 +75,22 @@ vim.keymap.set("n", "<leader>fn", function()
   vim.cmd("ZkNotes { sort = { 'modified' } }")
 end, opts)
 
+vim.keymap.set("n", "<leader>fmn", function()
+  vim.cmd("ZkNotes { sort = { 'modified' } }")
+end, opts)
+
+vim.keymap.set("n", "<leader>nmn", function()
+  local title = vim.fn.input("Title: ")
+  vim.cmd("ZkNew { title = '" .. title .. "' }")
+end, opts)
+
 -- Search for notes matching the current visual selection (uses Telescope, opens to the right)
 vim.keymap.set("v", "<leader>fn", function()
   vim.cmd("'<,'>ZkMatch")
+  -- FIXME: These need to do it only if selected
+end, opts)
+vim.keymap.set("v", "<leader>fmn", function()
+  vim.cmd("'<,'>ZkMatch", { match = { "type: meeting" }, sort = { "modified" } })
   -- FIXME: These need to do it only if selected
 end, opts)
 
@@ -88,117 +102,3 @@ end)
 vim.keymap.set("n", "<leader>eh", function()
   require("noice").cmd("history")
 end)
-
--- Debugger
--- vim.keymap.set("n",
---       "<leader>dt",
---       function()
---           require("dap").toggle_breakpoint()
---       end,
---       {
---       desc = "Toggle Breakpoint",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>dc",
---       function()
---           require("dap").continue()
---       end,
---       {
---       desc = "Continue",
---       nowait = true,
---       remap = false,
---      }
---     )
--- vim.keymap.set("n",
---       "<leader>di",
---       function()
---           require("dap").step_into()
---       end,
---       {
---       desc = "Step Into",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>do",
---       function()
---           require("dap").step_over()
---       end,
---       {
---       desc = "Step Over",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>du",
---       function()
---           require("dap").step_out()
---       end,
---       {
---       desc = "Step Out",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>dr",
---       function()
---           require("dap").repl.open()
---       end,
---       {
---       desc = "Open REPL",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>dl",
---       function()
---           require("dap").run_last()
---       end,
---       {
---       desc = "Run Last",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>dq",
---       function()
---           require("dap").terminate()
---           require("dapui").close()
---           require("nvim-dap-virtual-text").toggle()
---       end,
---       {
---       desc = "Terminate",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>db",
---       function()
---           require("dap").list_breakpoints()
---       end,
---       {
---       desc = "List Breakpoints",
---       nowait = true,
---       remap = false,
---       }
---     )
--- vim.keymap.set("n",
---       "<leader>de",
---       function()
---           require("dap").set_exception_breakpoints({ "all" })
---       end,
---       {
---       desc = "Set Exception Breakpoints",
---       nowait = true,
---       remap = false,
---       }
---     )
