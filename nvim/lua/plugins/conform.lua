@@ -25,6 +25,7 @@ return {
       typescript = { "prettierd", "prettier", stop_after_first = true },
       cpp = { "clang-format" },
       c = { "clang-format" },
+      cs = { "csharpier" },
     },
     -- Set default options
     default_format_opts = {

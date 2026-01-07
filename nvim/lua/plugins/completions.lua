@@ -1,7 +1,7 @@
 return {
   {
     "saghen/blink.cmp",
-    dependencies = { "onsails/lspkind.nvim" },
+    dependencies = { "onsails/lspkind.nvim", "rafamadriz/friendly-snippets" },
     event = "InsertEnter",
     version = "v0.*",
 
@@ -44,7 +44,24 @@ return {
           lsp = {
             fallbacks = { "snippets", "buffer" },
           },
-          snippets = { min_keyword_length = 1, score_offset = -1 },
+          snippets = {
+            min_keyword_length = 1,
+            score_offset = -1,
+            opts = {
+              friendly_snippets = true, -- default
+              extended_filetypes = {
+                markdown = { "jekyll" },
+                sh = { "shelldoc" },
+                python = { "python" },
+                c = { "c", "cdoc" },
+                cpp = { "unreal", "cpp", "cppdoc" },
+                vue = { "html", "script", "nuxt-html", "nuxt-script", "vue", "style" },
+                cs = { "csharp", "unity" },
+                zig = { "zig" },
+                typescript = { "typescript" },
+              },
+            },
+          },
           path = { opts = { get_cwd = vim.uv.cwd } },
           buffer = {
             max_items = 4,
