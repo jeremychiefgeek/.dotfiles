@@ -10,3 +10,4 @@ export ZK_NOTEBOOK_DIR="$HOME/notebook"
 export XDG_CONFIG_HOME="$HOME/.config"
 
 
+export PATH="$HOME/.local/bin:$PATH"
