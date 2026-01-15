@@ -104,3 +104,8 @@ end)
 vim.keymap.set("n", "<leader>eh", function()
   require("noice").cmd("history")
 end)
+
+-- Mini.files
+vim.keymap.set("n", "-", function()
+  require("mini.files").open(vim.uv.cwd(), true)
+end, { desc = "Open mini.files (current working directory)" })

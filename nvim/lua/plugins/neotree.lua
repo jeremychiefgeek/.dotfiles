@@ -1,67 +1,67 @@
 return {
-  {
-    "nvim-neo-tree/neo-tree.nvim",
-    branch = "v3.x",
-    lazy = false,
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-      "nvim-tree/nvim-web-devicons",
-    },
-    init = function()
-      vim.g.loaded_netrw = 1
-      vim.g.loaded_netrwPlugin = 1
-    end,
-    opts = function()
-      -- Lock to project root (cwd)
-      local locked_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":p")
-
-      local function is_locked_root(path)
-        return vim.fn.fnamemodify(path or "", ":p") == locked_root
-      end
-
-      return {
-        filesystem = {
-          bind_to_cwd = true,
-          hijack_netrw_behavior = "open_default", -- still hijack, but use sidebar
-
-          window = {
-            position = "left",
-            width = 32,
-            mappings = {
-              ["-"] = "navigate_up_locked",
-              ["<bs>"] = "navigate_up_locked",
-              ["q"] = "close_window",
-
-              -- Block root changing
-              ["C"] = "none",
-              ["."] = "none",
-            },
-          },
-
-          commands = {
-            navigate_up_locked = function(state)
-              if is_locked_root(state.path) then
-                return
-              end
-              require("neo-tree.sources.filesystem.commands").navigate_up(state)
-            end,
-          },
-        },
-      }
-    end,
-    config = function(_, opts)
-      require("neo-tree").setup(opts)
-
-      -- Toggle sidebar (Explorer)
-      vim.keymap.set("n", "<leader>e", function()
-        vim.cmd("Neotree filesystem reveal left")
-      end, { desc = "Explorer (Neo-tree)" })
-
-      -- Oil-style open but in sidebar
-      vim.keymap.set("n", "-", function()
-        vim.cmd("Neotree filesystem reveal left")
-      end, { desc = "Explorer (Neo-tree)" })
-    end,
-  },
+  -- {
+  --   "nvim-neo-tree/neo-tree.nvim",
+  --   branch = "v3.x",
+  --   lazy = false,
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "MunifTanjim/nui.nvim",
+  --     "nvim-tree/nvim-web-devicons",
+  --   },
+  --   init = function()
+  --     vim.g.loaded_netrw = 1
+  --     vim.g.loaded_netrwPlugin = 1
+  --   end,
+  --   opts = function()
+  --     -- Lock to project root (cwd)
+  --     local locked_root = vim.fn.fnamemodify(vim.fn.getcwd(), ":p")
+  --
+  --     local function is_locked_root(path)
+  --       return vim.fn.fnamemodify(path or "", ":p") == locked_root
+  --     end
+  --
+  --     return {
+  --       filesystem = {
+  --         bind_to_cwd = true,
+  --         hijack_netrw_behavior = "open_default", -- still hijack, but use sidebar
+  --
+  --         window = {
+  --           position = "left",
+  --           width = 32,
+  --           mappings = {
+  --             ["-"] = "navigate_up_locked",
+  --             ["<bs>"] = "navigate_up_locked",
+  --             ["q"] = "close_window",
+  --
+  --             -- Block root changing
+  --             ["C"] = "none",
+  --             ["."] = "none",
+  --           },
+  --         },
+  --
+  --         commands = {
+  --           navigate_up_locked = function(state)
+  --             if is_locked_root(state.path) then
+  --               return
+  --             end
+  --             require("neo-tree.sources.filesystem.commands").navigate_up(state)
+  --           end,
+  --         },
+  --       },
+  --     }
+  --   end,
+  --   config = function(_, opts)
+  --     require("neo-tree").setup(opts)
+  --
+  --     -- Toggle sidebar (Explorer)
+  --     vim.keymap.set("n", "<leader>e", function()
+  --       vim.cmd("Neotree filesystem reveal left")
+  --     end, { desc = "Explorer (Neo-tree)" })
+  --
+  --     -- Oil-style open but in sidebar
+  --     vim.keymap.set("n", "-", function()
+  --       vim.cmd("Neotree filesystem reveal left")
+  --     end, { desc = "Explorer (Neo-tree)" })
+  --   end,
+  -- },
 }

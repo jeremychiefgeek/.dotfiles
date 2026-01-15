@@ -34,10 +34,10 @@ return {
       newProjectPath = newProjPath,
       command_pattern = command_pattern,
 
-      file_explorer = function(dir) --custom file explorer set by user
-        vim.cmd("Neotree close")
-        vim.cmd("Neotree " .. dir)
-      end,
+      -- file_explorer = function(dir) --custom file explorer set by user
+      --   vim.cmd("Neotree close")
+      --   vim.cmd("Neotree " .. dir)
+      -- end,
     }
   end,
   -- opts = {
