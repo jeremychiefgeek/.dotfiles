@@ -7,6 +7,8 @@ vim.cmd("set shiftwidth=2")
 vim.g.mapleader = " "
 vim.opt.clipboard = "unnamedplus"
 
+vim.keymap.set("n", "<C-/>", ":noh<CR>")
+
 vim.opt.swapfile = false
 
 -- Navigate vim panes better
