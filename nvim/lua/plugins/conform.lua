@@ -23,13 +23,13 @@ return {
       python = { "isort", "black" },
       javascript = { "prettierd", "prettier", stop_after_first = true },
       typescript = { "prettierd", "prettier", stop_after_first = true },
-      cpp = { "clang-format" },
-      c = { "clang-format" },
+      -- cpp = { "clang-format" },
+      -- c = { "clang-format" },
       cs = { "csharpier" },
     },
     -- Set default options
     default_format_opts = {
-      lsp_format = "fallback",
+      lsp_format = "never",
     },
     -- Set up format-on-save
     format_on_save = { timeout_ms = 500 },
