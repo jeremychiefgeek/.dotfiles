@@ -123,6 +123,7 @@ return {
   --               buffer = "BUF",
   --               path = "PATH",
   --               emmet = "EMMET",
+  qa,
   --             }
   --
   --             local source_icons = {
