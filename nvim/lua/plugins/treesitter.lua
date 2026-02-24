@@ -24,7 +24,7 @@ return {
           "python",
           "markdown",
         },
-        highlight = { enable = true },
+        -- highlight = { enable = true },
         indent = { enable = false },
         folds = { enable = true },
       })
