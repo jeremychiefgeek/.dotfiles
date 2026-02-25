@@ -2,6 +2,7 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.cmd("set expandtab")
 vim.cmd("set tabstop=2")
+vim.cmd("set shiftwidth=4")
 vim.cmd("set softtabstop=2")
 vim.cmd("let loaded_matchparen = 1")
 vim.g.mapleader = " "
@@ -24,7 +25,7 @@ vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 
 vim.opt.updatetime = 50
-vim.opt.colorcolumn = "110"
+vim.opt.colorcolumn = "80"
 
 -- How I think behavior should work naturally
 vim.api.nvim_set_keymap("v", ">", ">gv", { noremap = true })
