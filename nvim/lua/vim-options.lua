@@ -8,7 +8,7 @@ vim.cmd("let loaded_matchparen = 1")
 vim.g.mapleader = " "
 vim.opt.clipboard = "unnamedplus"
 
-vim.keymap.set("n", "<C-/>", ":noh<CR>")
+vim.keymap.set("n", "<C-\\>", ":noh<CR>")
 
 vim.opt.swapfile = false
 
