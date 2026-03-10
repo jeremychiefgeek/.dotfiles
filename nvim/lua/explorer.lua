@@ -80,7 +80,6 @@ local function col_screen_pos(i)
   return screen_row, screen_col
 end
 
--- Strip leading icon (▸ or spaces) from a display line → bare name
 local function strip_icon(line)
   return line:match("^[▸ ]%s(.+)$") or line:match("^%s*(.+)$") or line
 end
@@ -105,8 +104,6 @@ local function make_col_buf(col)
   if #lines == 0 then lines = { "  (empty)" } end
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-  -- Store the original lines so we can diff on =
   col.original_lines = vim.deepcopy(lines)
 
   return buf
@@ -166,25 +163,36 @@ local function open_col_win(col, index)
   return win
 end
 
--- ── Diff / apply ──────────────────────────────────────────────────────────────
+-- ── Close all (standalone, no M dependency) ───────────────────────────────────
+local function close_all()
+  for i = #state.columns, 1, -1 do
+    local col = state.columns[i]
+    if vim.api.nvim_win_is_valid(col.win) then
+      vim.api.nvim_win_close(col.win, true)
+    end
+  end
+  for _, w in ipairs(shadow_wins) do
+    if vim.api.nvim_win_is_valid(w) then
+      vim.api.nvim_win_close(w, true)
+    end
+  end
+  shadow_wins      = {}
+  state.columns    = {}
+  state.active_col = 1
+end
 
--- Compare original_lines to current buffer lines and return a list of ops:
---   { op="rename", from=path, to=path }
---   { op="delete", path=path }
---   { op="create", path=path, is_dir=bool }
+-- ── Diff / apply ──────────────────────────────────────────────────────────────
 local function compute_ops(col)
   local cur_lines = vim.api.nvim_buf_get_lines(col.buf, 0, -1, false)
   local orig      = col.original_lines
   local ops       = {}
 
-  -- Build lookup: name -> entry  (for originals)
   local orig_by_name = {}
   for i, line in ipairs(orig) do
     local name = strip_icon(line)
     orig_by_name[name] = { line = line, idx = i }
   end
 
-  -- Build lookup for current lines
   local cur_by_name = {}
   for i, line in ipairs(cur_lines) do
     local name = strip_icon(line)
@@ -193,39 +201,36 @@ local function compute_ops(col)
     end
   end
 
-  -- Deleted: in original but not in current
+  -- Deleted or renamed: in original but not in current
   for name, info in pairs(orig_by_name) do
     if not cur_by_name[name] then
-      -- Check if it was renamed (same position, different name)
       local cur_at_pos = cur_lines[info.idx]
       local cur_name   = cur_at_pos and strip_icon(cur_at_pos) or nil
       if cur_name and cur_name ~= "" and cur_name ~= "(empty)"
         and not orig_by_name[cur_name] then
-        -- This is a rename
         table.insert(ops, {
-          op   = "rename",
-          from = col.path .. "/" .. name,
-          to   = col.path .. "/" .. cur_name,
+          op      = "rename",
+          from    = col.path .. "/" .. name,
+          to      = col.path .. "/" .. cur_name,
           display = "rename  " .. name .. "  →  " .. cur_name,
         })
-        -- Mark cur_name as handled
         cur_by_name[cur_name] = nil
       else
         table.insert(ops, {
           op      = "delete",
           path    = col.path .. "/" .. name,
-          is_dir  = orig_by_name[name].line:sub(1,1) == "▸",
+          is_dir  = orig_by_name[name].line:sub(1, 1) == "▸",
           display = "delete  " .. name,
         })
       end
     end
   end
 
-  -- Created: in current but not in original and not already handled
+  -- Created: in current but not in original
   for name, _ in pairs(cur_by_name) do
     if not orig_by_name[name] then
       local is_dir = name:sub(-1) == "/"
-      local clean  = is_dir and name:sub(1,-2) or name
+      local clean  = is_dir and name:sub(1, -2) or name
       table.insert(ops, {
         op      = "create",
         path    = col.path .. "/" .. clean,
@@ -238,7 +243,7 @@ local function compute_ops(col)
   return ops
 end
 
-local function apply_ops(ops, col)
+local function apply_ops(ops)
   for _, op in ipairs(ops) do
     if op.op == "rename" then
       local ok, err = os.rename(op.from, op.to)
@@ -274,18 +279,21 @@ local function refresh_col(col)
     table.insert(lines, entry_to_line(e))
   end
   if #lines == 0 then lines = { "  (empty)" } end
-  vim.api.nvim_buf_set_lines(col.buf, 0, -1, false, lines)
+  if vim.api.nvim_buf_is_valid(col.buf) then
+    vim.api.nvim_buf_set_lines(col.buf, 0, -1, false, lines)
+  end
   col.original_lines = vim.deepcopy(lines)
 end
 
--- Show confirmation floating window with the diff, apply on y / cancel on n
 local function show_confirm(ops, col)
   if #ops == 0 then
     vim.notify("No changes.", vim.log.levels.INFO)
     return
   end
 
-  local col_buf = col.buf  -- capture before opening confirm window
+  -- Snapshot everything we need before the confirm window steals focus
+  local col_path = col.path
+  local col_buf  = col.buf
 
   local lines = { "  Pending changes:", "" }
   for _, op in ipairs(ops) do
@@ -339,18 +347,36 @@ local function show_confirm(ops, col)
     if vim.api.nvim_buf_is_valid(col_buf) then
       vim.api.nvim_buf_set_lines(col_buf, 0, -1, false, col.original_lines)
     end
+    -- Return focus to the column
+    for _, c in ipairs(state.columns) do
+      if c.path == col_path and vim.api.nvim_win_is_valid(c.win) then
+        vim.api.nvim_set_current_win(c.win)
+        break
+      end
+    end
   end
 
   vim.keymap.set("n", "y", function()
     close_confirm()
-    apply_ops(ops, col)
-    -- Re-focus the column window before refreshing
-    if vim.api.nvim_win_is_valid(col.win) then
-      vim.api.nvim_set_current_win(col.win)
-    end
-    if vim.api.nvim_buf_is_valid(col_buf) then
-      refresh_col(col)
-    end
+    apply_ops(ops)
+
+    -- The WinLeave from closing confirm may have triggered close_all.
+    -- Re-open at the same path if needed, then refresh.
+    vim.schedule(function()
+      if not is_open() then
+        M.open(col_path)
+      else
+        for _, c in ipairs(state.columns) do
+          if c.path == col_path then
+            refresh_col(c)
+            if vim.api.nvim_win_is_valid(c.win) then
+              vim.api.nvim_set_current_win(c.win)
+            end
+            break
+          end
+        end
+      end
+    end)
   end, { buffer = buf, noremap = true, nowait = true })
 
   vim.keymap.set("n", "n",     revert, { buffer = buf, noremap = true, nowait = true })
@@ -363,6 +389,7 @@ local function setup_keymaps(buf, col)
   local opts = { buffer = buf, noremap = true, nowait = true, silent = true }
   local map  = function(k, fn) vim.keymap.set("n", k, fn, opts) end
 
+  -- All callbacks are plain locals — no M.* dependency at call time
   map("l",     function() M.navigate_in()     end)
   map("<CR>",  function() M.navigate_in()     end)
   map("h",     function() M.go_left()         end)
@@ -370,10 +397,9 @@ local function setup_keymaps(buf, col)
   map("v",     function() M.open_split(true)  end)
   map("s",     function() M.open_split(false) end)
   map(".",     function() M.toggle_hidden()   end)
-  map("q",     function() M.close()           end)
-  map("<M-e>", function() M.close()           end)
+  map("q",     close_all)
+  map("<M-e>", close_all)
 
-  -- = triggers diff + confirm
   map("=", function()
     local ops = compute_ops(col)
     show_confirm(ops, col)
@@ -406,7 +432,9 @@ local function push_column(path, focus_row)
             break
           end
         end
-        if not in_explorer then M.close() end
+        if not in_explorer then
+          close_all()
+        end
       end)
     end,
   })
@@ -452,8 +480,7 @@ end
 local function current_entry()
   local col = active_col()
   if not col then return nil end
-  local row  = vim.api.nvim_win_get_cursor(col.win)[1]
-  -- Match against original entries by row (buffer may be edited)
+  local row = vim.api.nvim_win_get_cursor(col.win)[1]
   return col.entries[row]
 end
 
@@ -466,13 +493,30 @@ function M.navigate_in()
     push_column(e.path)
   else
     local path = e.path
-    M.close()
-    vim.cmd("edit " .. vim.fn.fnameescape(path))
+    close_all()
+    if #vim.api.nvim_list_wins() > 1 then
+      vim.cmd("vsplit " .. vim.fn.fnameescape(path))
+    else
+      vim.cmd("edit " .. vim.fn.fnameescape(path))
+    end
+    local base = vim.fn.fnamemodify(path, ":r")
+    if path:match("%.h$") then
+      local corresponding = vim.loop.fs_stat(base .. ".c")   and base .. ".c"
+                         or vim.loop.fs_stat(base .. ".cpp") and base .. ".cpp"
+                         or nil
+      if corresponding then
+        vim.cmd("vsplit " .. vim.fn.fnameescape(corresponding))
+      end
+    elseif path:match("%.hin$") then
+      if vim.loop.fs_stat(base .. ".cin") then
+        vim.cmd("vsplit " .. vim.fn.fnameescape(base .. ".cin"))
+      end
+    end
   end
 end
 
 function M.go_left()
-  if #state.columns <= 1 then M.close(); return end
+  if #state.columns <= 1 then close_all(); return end
   pop_column()
 end
 
@@ -480,7 +524,7 @@ function M.open_split(vertical)
   local e = current_entry()
   if not e or e.type == "directory" then return end
   local path = e.path
-  M.close()
+  close_all()
   local cmd = vertical and "vsplit" or "split"
   vim.cmd(cmd .. " " .. vim.fn.fnameescape(path))
 end
@@ -493,25 +537,12 @@ function M.toggle_hidden()
 end
 
 function M.close()
-  for i = #state.columns, 1, -1 do
-    local col = state.columns[i]
-    if vim.api.nvim_win_is_valid(col.win) then
-      vim.api.nvim_win_close(col.win, true)
-    end
-  end
-  for _, w in ipairs(shadow_wins) do
-    if vim.api.nvim_win_is_valid(w) then
-      vim.api.nvim_win_close(w, true)
-    end
-  end
-  shadow_wins      = {}
-  state.columns    = {}
-  state.active_col = 1
+  close_all()
 end
 
 -- ── Entry point ───────────────────────────────────────────────────────────────
 function M.open(start_path)
-  if is_open() then M.close(); return end
+  if is_open() then close_all(); return end
 
   local cwd      = vim.fn.fnamemodify(vim.fn.getcwd(), ":p"):gsub("[\\/]$", "")
   local cur_file = vim.fn.expand("%:p")

@@ -1,0 +1,368 @@
+" vimrc - converted from Jeremy's Emacs init.el
+" Requires: Vim 8+
+syntax on
+filetype plugin indent on
+
+" ------- Generic Editor Options ---------
+set number
+set relativenumber
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set softtabstop=2
+let loaded_matchparen = 1
+let mapleader = " "
+set clipboard=unnamed
+set noswapfile
+
+" --------- Missing niceties ---------------------------------------------------
+set wildmenu
+set wildmode=longest:full,full
+set laststatus=2
+set backspace=indent,eol,start
+
+" --------- Undo ---------------------------------------------------------------
+" Emacs had undo-limit 20000000 / undo-strong-limit 40000000.
+" Vim's undolevels is count-based; 10000 is effectively unlimited for normal use.
+set undolevels=10000
+set undoreload=100000
+
+" --------- OS detection -------------------------------------------------------
+let g:jeremy_win32   = has("win32") || has("win64")
+let g:jeremy_linux   = has("unix") && !has("mac")
+let g:jeremy_mac     = has("mac") || has("macunix")
+if g:jeremy_win32
+  let g:jeremy_makescript = "build.bat"
+else
+  let g:jeremy_makescript = "make"
+endif
+
+" --------- UI chrome ----------------------------------------------------------
+set guioptions-=T          " no toolbar  (tool-bar-mode 0)
+set guioptions-=m          " no menu bar (menu-bar-mode -1)
+set guioptions-=r          " no right scrollbar
+set guioptions-=L          " no left  scrollbar
+
+" ---------- Search Highlight ------------
+set hlsearch
+set incsearch
+
+" Disable middle-mouse paste  (global-unset-key [mouse-2])
+noremap  <MiddleMouse>   <Nop>
+noremap! <MiddleMouse>   <Nop>
+noremap  <2-MiddleMouse> <Nop>
+noremap! <2-MiddleMouse> <Nop>
+
+" This is for clearing highlights
+nnoremap <C-\> :noh<CR>
+
+" removed stray <CR> from window navigation mappings
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+
+" --------- File explorer ------------------------------------------------------
+nnoremap <leader>e  :Explore<CR>
+nnoremap <leader>es :Sexplore<CR>
+nnoremap <leader>ev :Vexplore<CR>
+
+" --------- Keyword highlighting (TODO / STUDY / IMPORTANT / NOTE) -------------
+" Mirrors the font-lock-fixme/study/important/note faces.
+augroup jeremy_keywords
+  autocmd!
+  autocmd Syntax c,cpp,vim,python,lua
+    \ syn keyword jeremyTodo      contained TODO      |
+    \ syn keyword jeremyStudy     contained STUDY     |
+    \ syn keyword jeremyImportant contained IMPORTANT |
+    \ syn keyword jeremyNote      contained NOTE      |
+    \ syn cluster cCommentGroup add=jeremyTodo,jeremyStudy,jeremyImportant,jeremyNote |
+    \ hi jeremyTodo      guifg=#e8a0a0 gui=bold,underline |
+    \ hi jeremyStudy     guifg=#e8d9a0 gui=bold,underline |
+    \ hi jeremyImportant guifg=#e8d9a0 gui=bold,underline |
+    \ hi jeremyNote      guifg=#a0c8a0 gui=bold,underline
+augroup END
+
+" --------- Build / make -------------------------------------------------------
+let g:compilation_directory_locked = 0
+let g:last_compilation_directory   = ""
+
+function! s:FindProjectDirectoryRecursive()
+  let l:dir = expand("%:p:h")
+  if l:dir == "" | let l:dir = getcwd() | endif
+  while 1
+    if filereadable(l:dir . "/" . g:jeremy_makescript)
+      exec "cd " . fnameescape(l:dir)
+      return 1
+    endif
+    let l:parent = fnamemodify(l:dir, ":h")
+    if l:parent ==# l:dir
+      return 0
+    endif
+    let l:dir = l:parent
+  endwhile
+endfunction
+
+function! LockCompilationDirectory()
+  let g:compilation_directory_locked = 1
+  echo "Compilation directory is locked."
+endfunction
+
+function! UnlockCompilationDirectory()
+  let g:compilation_directory_locked = 0
+  echo "Compilation directory is roaming."
+endfunction
+
+" FIX: branched on OS so build works on Linux/Mac as well as Windows
+function! MakeWithoutAsking()
+  let l:start_dir = getcwd()
+  if g:compilation_directory_locked
+    exec "cd " . fnameescape(g:last_compilation_directory)
+  else
+    call s:FindProjectDirectoryRecursive()
+    let g:last_compilation_directory = getcwd()
+  endif
+  if g:jeremy_win32
+    let l:cmd = 'cmd /c ' . getcwd() . '\' . g:jeremy_makescript
+  else
+    let l:cmd = 'cd ' . shellescape(getcwd()) . ' && ' . g:jeremy_makescript
+  endif
+  let l:output = system(l:cmd)
+  echo l:output
+  exec "cd " . fnameescape(l:start_dir)
+  wincmd p
+endfunction
+
+" Alt-m -> build
+nnoremap <leader>mm :call MakeWithoutAsking()<CR>
+
+" --------- File-type associations ---------------------------------------------
+augroup jeremy_filetypes
+  autocmd!
+  autocmd BufNewFile,BufRead *.cpp,*.hin,*.cin,*.inl,*.rdc,*.h,*.c,*.cc,*.c8
+    \ setfiletype cpp
+  autocmd BufNewFile,BufRead *.txt  setfiletype text
+  autocmd BufNewFile,BufRead *.ms   setfiletype fundamental
+  autocmd BufNewFile,BufRead *.m,*.mm setfiletype objc
+augroup END
+
+" --------- Key bindings -------------------------------------------------------
+nnoremap <C-Right> w
+nnoremap <C-Left>  b
+nnoremap <C-Up>    {
+nnoremap <C-Down>  }
+nnoremap <Home> ^
+nnoremap <End>  $
+inoremap <Home> <C-o>^
+inoremap <End>  <C-o>$
+nnoremap <PageDown>   <C-f>
+nnoremap <PageUp> <C-b>
+nnoremap <C-PageDown> <C-w>w<C-d><C-w>p
+nnoremap <C-PageUp>   <C-w>w<C-u><C-w>p
+
+" --------- Startup / display --------------------------------------------------
+set nowrap
+set display+=lastline
+set nobackup
+set noswapfile
+set nowritebackup
+set noerrorbells
+set scrolloff=3
+
+" Split on startup
+augroup jeremy_startup_split
+  autocmd!
+  autocmd VimEnter * if argc() == 0 | vsplit | endif
+augroup END
+
+" Maximise on startup
+if g:jeremy_win32
+  augroup jeremy_maximize
+    autocmd!
+    autocmd GUIEnter * simalt ~x
+  augroup END
+endif
+
+" --------- Font ---------------------------------------------------------------
+if has("gui_running")
+  if g:jeremy_win32
+    set guifont=LiterationMono\ Nerd\ Font\ Mono:h12
+  else
+    set guifont=LiterationMono\ Nerd\ Font\ Mono\ 12
+  endif
+endif
+
+" --------- Mouse wheel --------------------------------------------------------
+" mouse-wheel-scroll-amount '(15) - scroll 15 lines at a time
+" (mousescroll is Vim 9+ only; use explicit mappings for Vim 8)
+noremap  <ScrollWheelUp>   15<C-y>
+noremap  <ScrollWheelDown> 15<C-e>
+inoremap <ScrollWheelUp>   <C-o>15<C-y>
+inoremap <ScrollWheelDown> <C-o>15<C-e>
+
+" --------- Cursor -------------------------------------------------------------
+" Block cursor in normal mode, line cursor in insert mode
+set guicursor=n-v-c:block-Cursor
+set guicursor+=i:ver25-Cursor
+set guicursor+=r:hor20-Cursor
+
+" --------- C / C++ style ------------------------------------------------------
+augroup jeremy_c_style
+  autocmd!
+  autocmd FileType c,cpp call s:JeremyCStyle()
+augroup END
+
+function! s:JeremyCStyle()
+  setlocal tabstop=4
+  setlocal shiftwidth=4
+  setlocal expandtab
+  setlocal cindent
+  setlocal cinoptions=l1,g0,h-4,t0,+4,(4,u0,w1,W4,m1,j1
+  inoremap <buffer> <CR> <CR><C-f>
+  inoremap <buffer> <Tab>   <C-n>
+  inoremap <buffer> <S-Tab> <Tab>
+  if !filereadable(expand("%"))
+    if expand("%") =~# '\.\(h\|hin\)$'
+      call s:JeremyHeaderFormat()
+    elseif expand("%") =~# '\.\(cpp\|cin\)$'
+      call s:JeremySourceFormat()
+    endif
+  endif
+  nnoremap <buffer> <leader>f   :call <SID>FindCorrespondingFile()<CR>
+  nnoremap <buffer> <leader>ff   :call <SID>FindCorrespondingFileOtherWindow()<CR>
+  nnoremap <buffer> <leader>s   :call <SID>JeremySaveBuffer()<CR>
+  nnoremap <buffer> <leader>j   g<C-]>
+  nnoremap <buffer> <leader>.   gqip
+  nnoremap <buffer> <leader>/   vaf
+  nnoremap <buffer> <leader>a   p=']
+  nnoremap <buffer> <leader>z   d
+  setlocal errorformat+=
+    \%*[0-9]>%f(%l)\ :\ %t%*[a-z\ ]C%n:\ %m,
+    \%f(%l)\ :\ %t%*[a-z\ ]C%n:\ %m
+endfunction
+
+function! s:JeremyHeaderFormat()
+  let l:base = toupper(fnamemodify(expand("%"), ":t:r"))
+  let l:guard = l:base . "_H"
+  call setline(1, "#if !defined(" . l:guard . ")")
+  call append(1, "/* ========================================================================")
+  call append(2, "   $File: $")
+  call append(3, "   $Date: $")
+  call append(4, "   $Revision: $")
+  call append(5, "   $Creator: Jeremy Evans $")
+  call append(6, "   $Notice: (C) Copyright 2026 by Chief Geek, LLC. All Rights Reserved. $")
+  call append(7, "   ======================================================================== */")
+  call append(8, "")
+  call append(9, "#define " . l:guard)
+  call append(10, "#endif")
+endfunction
+
+function! s:JeremySourceFormat()
+  call setline(1, "/* ========================================================================")
+  call append(1, "   $File: $")
+  call append(2, "   $Date: $")
+  call append(3, "   $Revision: $")
+  call append(4, "   $Creator: Jeremy Evans $")
+  call append(5, "   $Notice: (C) Copyright 2026 by Chief Geek, LLC. All Rights Reserved. $")
+  call append(6, "   ======================================================================== */")
+endfunction
+
+function! s:FindCorrespondingFile()
+  let l:file = expand("%")
+  let l:base = fnamemodify(l:file, ":r")
+  let l:corresponding = ""
+  if l:file =~# '\.c$'
+    let l:corresponding = l:base . ".h"
+  elseif l:file =~# '\.h$'
+    if filereadable(l:base . ".c")
+      let l:corresponding = l:base . ".c"
+    else
+      let l:corresponding = l:base . ".cpp"
+    endif
+  elseif l:file =~# '\.hin$'
+    let l:corresponding = l:base . ".cin"
+  elseif l:file =~# '\.cin$'
+    let l:corresponding = l:base . ".hin"
+  elseif l:file =~# '\.cpp$'
+    let l:corresponding = l:base . ".h"
+  endif
+  if l:corresponding != ""
+    exec "edit " . fnameescape(l:corresponding)
+  else
+    echoerr "Unable to find a corresponding file"
+  endif
+endfunction
+
+function! s:FindCorrespondingFileOtherWindow()
+  let l:cur = expand("%:p")
+  wincmd w
+  exec "edit " . fnameescape(l:cur)
+  call s:FindCorrespondingFile()
+  wincmd p
+endfunction
+
+function! s:JeremySaveBuffer()
+  let l:save_pos = getcurpos()
+  retab!
+  write
+  call setpos(".", l:save_pos)
+endfunction
+
+" --------- Theme --------------------------------------------------------------
+" Explicitly register vimfiles so Vim finds colors\compline.vim on Windows.
+if g:jeremy_win32
+  let &runtimepath = $HOME . '/vimfiles,' . &runtimepath . ',' . $HOME . '/vimfiles/after'
+endif
+set termguicolors
+colorscheme compline
+
+" --------- Todo list ----------------------------------------------------------
+" Alt+t opens a list of all TODO/STUDY/IMPORTANT/NOTE in the current file.
+" Enter jumps to that line, q closes the list.
+function! ShowTodoList()
+  let l:keywords = ['TODO', 'STUDY', 'IMPORTANT', 'NOTE']
+  let l:pattern = join(l:keywords, '\|')
+  let l:matches = []
+  let l:lines = getline(1, '$')
+  let l:lnum = 1
+  for l:line in l:lines
+    if l:line =~# l:pattern
+      call add(l:matches, {'filename': expand('%:p'), 'lnum': l:lnum, 'text': trim(l:line)})
+    endif
+    let l:lnum += 1
+  endfor
+  if empty(l:matches)
+    echo "No TODOs found."
+    return
+  endif
+  call setqflist(l:matches)
+  copen
+  nnoremap <buffer> <CR> <CR>:cclose<CR>
+  nnoremap <buffer> q :cclose<CR>
+endfunction
+
+nnoremap <M-t> :call ShowTodoList()<CR>
+
+" --------- Re-indent after yank -----------------------------------------------
+" split into two autocmd lines so the | doesn't terminate the first early
+"augroup jeremy_yank_indent
+"  autocmd!
+"  autocmd FileType c,cpp,vim nnoremap <buffer> p p=']
+"  autocmd FileType c,cpp,vim nnoremap <buffer> P P=']
+"augroup END
+
+" --------- Query replace (Emacs style) ----------------------------------------
+" FIX: removed the earlier duplicate <M-%> mappings; this definition wins
+function! QueryReplace(visual)
+  let l:search  = input("Query replace: ")
+  if l:search == "" | return | endif
+  let l:replace = input("Replace with: ")
+  if a:visual
+    execute "'<,'>s/" . escape(l:search, '/') . "/" . escape(l:replace, '/') . "/gc"
+  else
+    execute "%s/" . escape(l:search, '/') . "/" . escape(l:replace, '/') . "/gc"
+  endif
+endfunction
+
+nnoremap <leader>fr :call QueryReplace(0)<CR>
+vnoremap <leader>fr :<C-u>call QueryReplace(1)<CR>

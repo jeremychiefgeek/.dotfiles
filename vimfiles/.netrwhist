@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =6
+let g:netrw_dirhist_6='W:/handmade\code'
+let g:netrw_dirhist_5='W:\handmade'
+let g:netrw_dirhist_4='W:/handmade\code'
+let g:netrw_dirhist_3='W:\handmade'
+let g:netrw_dirhist_2='W:\handmade\code'
+let g:netrw_dirhist_1='W:/handmade\code'
+let g:netrw_dirhist_0='W:\handmade'
+let g:netrw_dirhist_9='W:\handmade\code'
+let g:netrw_dirhist_8='W:/handmade\code'
+let g:netrw_dirhist_7='W:/handmade'
