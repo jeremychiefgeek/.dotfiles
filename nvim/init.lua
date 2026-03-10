@@ -14,7 +14,7 @@ require("todo")
 require("pack").setup({
   -- Add plugins here as "author/repo", e.g.:
   -- "nvim-lua/plenary.nvim",
-  "nvim-neorg/neorg"
+  "kdheepak/lazygit.nvim",
 })
 
 

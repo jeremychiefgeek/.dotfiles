@@ -46,6 +46,10 @@ map("n", "<C-l>", "<C-w>l", { noremap = true })
 map("n", "<C-j>", "<C-w>j", { noremap = true })
 map("n", "<C-k>", "<C-w>k", { noremap = true })
 
+
+-- Lazygit
+map("n", "<leader>gg", "<cmd>LazyGit<cr>", { noremap = true })
+
 -- Silence E486 on n/N when there's no active search
 map("n", "n", function()
   local ok, err = pcall(function() vim.cmd("normal! n") end)

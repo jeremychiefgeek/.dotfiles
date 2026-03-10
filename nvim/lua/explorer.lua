@@ -1,21 +1,26 @@
 -- explorer.lua  - Column-based file explorer (mini.files style)
--- Each column is a real buffer + window; cursor movement is native.
 --
--- Keybinds (inside any explorer column):
---   l / Enter    – enter directory (opens new column) or open file
---   h / Backspace– go left / close rightmost column
+-- Navigation:
+--   l / Enter    – enter directory or open file
+--   h / Backspace– go left
 --   v            – open file in vertical split
 --   s            – open file in horizontal split
---   n            – new file or directory (end name with / for dir)
---   r            – rename entry under cursor
---   d            – delete entry under cursor (confirms first)
 --   .            – toggle hidden files
---   q / <M-e>    – close explorer
+--   q / <M-e>    – close
+--
+-- File manipulation (edit the buffer like normal text, then):
+--   =            – preview and apply pending changes
+--
+-- Editing rules:
+--   - Edit a line's name  → rename that file/dir
+--   - Delete a line       → delete that file/dir
+--   - Add a new line      → create file (end with / to create a directory)
+--   Icons (▸ / space) are stripped before applying — only the name matters.
 
 local M = {}
 
 -- ── Constants ─────────────────────────────────────────────────────────────────
-local COL_WIDTH   = 32
+local COL_WIDTH   = 36
 local COL_HEIGHT  = 24
 local COL_PADDING = 1
 
@@ -30,10 +35,13 @@ local shadow_wins = {}
 
 -- ── Highlights ────────────────────────────────────────────────────────────────
 local function setup_highlights()
-  vim.api.nvim_set_hl(0, "ExplorerBorder", { fg = "#676d77", bg = "#1a1d21" })
-  vim.api.nvim_set_hl(0, "ExplorerTitle",  { fg = "#ccc4b4", bg = "#1a1d21", bold = true })
-  vim.api.nvim_set_hl(0, "ExplorerNormal", { fg = "#f0efeb", bg = "#22262b" })
-  vim.api.nvim_set_hl(0, "ExplorerShadow", { bg = "#0f1114" })
+  vim.api.nvim_set_hl(0, "ExplorerBorder",  { fg = "#676d77", bg = "#1a1d21" })
+  vim.api.nvim_set_hl(0, "ExplorerTitle",   { fg = "#ccc4b4", bg = "#1a1d21", bold = true })
+  vim.api.nvim_set_hl(0, "ExplorerNormal",  { fg = "#f0efeb", bg = "#22262b" })
+  vim.api.nvim_set_hl(0, "ExplorerShadow",  { bg = "#0f1114" })
+  vim.api.nvim_set_hl(0, "ExplorerAdded",   { fg = "#b8c4b8", bg = "#22262b", bold = true })
+  vim.api.nvim_set_hl(0, "ExplorerDeleted", { fg = "#CDACAC", bg = "#22262b", bold = true })
+  vim.api.nvim_set_hl(0, "ExplorerChanged", { fg = "#d4ccb4", bg = "#22262b", bold = true })
 end
 
 -- ── Helpers ───────────────────────────────────────────────────────────────────
@@ -65,14 +73,24 @@ local function scan_dir(path)
 end
 
 local function col_screen_pos(i)
-  local total_w   = COL_WIDTH * i + COL_PADDING * (i - 1)
+  local total_w    = COL_WIDTH * i + COL_PADDING * (i - 1)
   local screen_col = math.floor((vim.o.columns - total_w) / 2)
     + (i - 1) * (COL_WIDTH + COL_PADDING)
   local screen_row = math.floor((vim.o.lines - COL_HEIGHT) / 2)
   return screen_row, screen_col
 end
 
+-- Strip leading icon (▸ or spaces) from a display line → bare name
+local function strip_icon(line)
+  return line:match("^[▸ ]%s(.+)$") or line:match("^%s*(.+)$") or line
+end
+
 -- ── Buffer creation ───────────────────────────────────────────────────────────
+local function entry_to_line(e)
+  local icon = e.type == "directory" and "▸ " or "  "
+  return icon .. e.name
+end
+
 local function make_col_buf(col)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.bo[buf].buftype   = "nofile"
@@ -82,14 +100,14 @@ local function make_col_buf(col)
 
   local lines = {}
   for _, e in ipairs(col.entries) do
-    local icon = e.type == "directory" and "▸ " or "  "
-    table.insert(lines, icon .. e.name)
+    table.insert(lines, entry_to_line(e))
   end
   if #lines == 0 then lines = { "  (empty)" } end
 
-  vim.bo[buf].modifiable = true
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].modifiable = false
+
+  -- Store the original lines so we can diff on =
+  col.original_lines = vim.deepcopy(lines)
 
   return buf
 end
@@ -114,7 +132,6 @@ end
 
 local function open_col_win(col, index)
   setup_highlights()
-
   local row, c = col_screen_pos(index)
   local short  = vim.fn.fnamemodify(col.path, ":~:.")
   if short == "" then short = col.path end
@@ -134,10 +151,10 @@ local function open_col_win(col, index)
     zindex    = 50,
   })
 
-  vim.wo[win].cursorline  = true
-  vim.wo[win].wrap        = false
-  vim.wo[win].number      = false
-  vim.wo[win].signcolumn  = "no"
+  vim.wo[win].cursorline   = true
+  vim.wo[win].wrap         = false
+  vim.wo[win].number       = false
+  vim.wo[win].signcolumn   = "no"
   vim.wo[win].winhighlight = table.concat({
     "Normal:ExplorerNormal",
     "NormalFloat:ExplorerNormal",
@@ -149,33 +166,228 @@ local function open_col_win(col, index)
   return win
 end
 
+-- ── Diff / apply ──────────────────────────────────────────────────────────────
+
+-- Compare original_lines to current buffer lines and return a list of ops:
+--   { op="rename", from=path, to=path }
+--   { op="delete", path=path }
+--   { op="create", path=path, is_dir=bool }
+local function compute_ops(col)
+  local cur_lines = vim.api.nvim_buf_get_lines(col.buf, 0, -1, false)
+  local orig      = col.original_lines
+  local ops       = {}
+
+  -- Build lookup: name -> entry  (for originals)
+  local orig_by_name = {}
+  for i, line in ipairs(orig) do
+    local name = strip_icon(line)
+    orig_by_name[name] = { line = line, idx = i }
+  end
+
+  -- Build lookup for current lines
+  local cur_by_name = {}
+  for i, line in ipairs(cur_lines) do
+    local name = strip_icon(line)
+    if name ~= "(empty)" and name ~= "" then
+      cur_by_name[name] = { line = line, idx = i }
+    end
+  end
+
+  -- Deleted: in original but not in current
+  for name, info in pairs(orig_by_name) do
+    if not cur_by_name[name] then
+      -- Check if it was renamed (same position, different name)
+      local cur_at_pos = cur_lines[info.idx]
+      local cur_name   = cur_at_pos and strip_icon(cur_at_pos) or nil
+      if cur_name and cur_name ~= "" and cur_name ~= "(empty)"
+        and not orig_by_name[cur_name] then
+        -- This is a rename
+        table.insert(ops, {
+          op   = "rename",
+          from = col.path .. "/" .. name,
+          to   = col.path .. "/" .. cur_name,
+          display = "rename  " .. name .. "  →  " .. cur_name,
+        })
+        -- Mark cur_name as handled
+        cur_by_name[cur_name] = nil
+      else
+        table.insert(ops, {
+          op      = "delete",
+          path    = col.path .. "/" .. name,
+          is_dir  = orig_by_name[name].line:sub(1,1) == "▸",
+          display = "delete  " .. name,
+        })
+      end
+    end
+  end
+
+  -- Created: in current but not in original and not already handled
+  for name, _ in pairs(cur_by_name) do
+    if not orig_by_name[name] then
+      local is_dir = name:sub(-1) == "/"
+      local clean  = is_dir and name:sub(1,-2) or name
+      table.insert(ops, {
+        op      = "create",
+        path    = col.path .. "/" .. clean,
+        is_dir  = is_dir,
+        display = (is_dir and "mkdir   " or "create  ") .. clean,
+      })
+    end
+  end
+
+  return ops
+end
+
+local function apply_ops(ops, col)
+  for _, op in ipairs(ops) do
+    if op.op == "rename" then
+      local ok, err = os.rename(op.from, op.to)
+      if not ok then
+        vim.notify("Rename failed: " .. (err or ""), vim.log.levels.ERROR)
+      end
+    elseif op.op == "delete" then
+      local ok
+      if op.is_dir then
+        ok = vim.fn.delete(op.path, "rf") == 0
+      else
+        ok = os.remove(op.path) ~= nil
+      end
+      if not ok then
+        vim.notify("Delete failed: " .. op.path, vim.log.levels.ERROR)
+      end
+    elseif op.op == "create" then
+      if op.is_dir then
+        vim.fn.mkdir(op.path, "p")
+      else
+        vim.fn.mkdir(vim.fn.fnamemodify(op.path, ":h"), "p")
+        local f = io.open(op.path, "w")
+        if f then f:close() end
+      end
+    end
+  end
+end
+
+local function refresh_col(col)
+  col.entries = scan_dir(col.path)
+  local lines = {}
+  for _, e in ipairs(col.entries) do
+    table.insert(lines, entry_to_line(e))
+  end
+  if #lines == 0 then lines = { "  (empty)" } end
+  vim.api.nvim_buf_set_lines(col.buf, 0, -1, false, lines)
+  col.original_lines = vim.deepcopy(lines)
+end
+
+-- Show confirmation floating window with the diff, apply on y / cancel on n
+local function show_confirm(ops, col)
+  if #ops == 0 then
+    vim.notify("No changes.", vim.log.levels.INFO)
+    return
+  end
+
+  local col_buf = col.buf  -- capture before opening confirm window
+
+  local lines = { "  Pending changes:", "" }
+  for _, op in ipairs(ops) do
+    table.insert(lines, "  " .. op.display)
+  end
+  table.insert(lines, "")
+  table.insert(lines, "  Apply? [y]es / [n]o")
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.bo[buf].buftype   = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+  for i, op in ipairs(ops) do
+    local hl = op.op == "create"  and "ExplorerAdded"
+            or op.op == "delete"  and "ExplorerDeleted"
+            or "ExplorerChanged"
+    vim.api.nvim_buf_add_highlight(buf, -1, hl, i + 1, 0, -1)
+  end
+
+  local width  = 52
+  local height = #lines + 2
+  local win    = vim.api.nvim_open_win(buf, true, {
+    relative  = "editor",
+    width     = width,
+    height    = height,
+    row       = math.floor((vim.o.lines   - height) / 2),
+    col       = math.floor((vim.o.columns - width)  / 2),
+    style     = "minimal",
+    border    = "rounded",
+    title     = " Confirm ",
+    title_pos = "center",
+    zindex    = 60,
+  })
+
+  vim.wo[win].winhighlight = table.concat({
+    "Normal:ExplorerNormal",
+    "NormalFloat:ExplorerNormal",
+    "FloatBorder:ExplorerBorder",
+    "FloatTitle:ExplorerTitle",
+  }, ",")
+
+  local function close_confirm()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+
+  local function revert()
+    close_confirm()
+    if vim.api.nvim_buf_is_valid(col_buf) then
+      vim.api.nvim_buf_set_lines(col_buf, 0, -1, false, col.original_lines)
+    end
+  end
+
+  vim.keymap.set("n", "y", function()
+    close_confirm()
+    apply_ops(ops, col)
+    -- Re-focus the column window before refreshing
+    if vim.api.nvim_win_is_valid(col.win) then
+      vim.api.nvim_set_current_win(col.win)
+    end
+    if vim.api.nvim_buf_is_valid(col_buf) then
+      refresh_col(col)
+    end
+  end, { buffer = buf, noremap = true, nowait = true })
+
+  vim.keymap.set("n", "n",     revert, { buffer = buf, noremap = true, nowait = true })
+  vim.keymap.set("n", "<Esc>", revert, { buffer = buf, noremap = true, nowait = true })
+  vim.keymap.set("n", "q",     revert, { buffer = buf, noremap = true, nowait = true })
+end
+
 -- ── Keymaps ───────────────────────────────────────────────────────────────────
-local function setup_keymaps(buf)
+local function setup_keymaps(buf, col)
   local opts = { buffer = buf, noremap = true, nowait = true, silent = true }
   local map  = function(k, fn) vim.keymap.set("n", k, fn, opts) end
 
-  map("l",     function() M.navigate_in()      end)
-  map("<CR>",  function() M.navigate_in()      end)
-  map("h",     function() M.go_left()          end)
-  map("<BS>",  function() M.go_left()          end)
-  map("v",     function() M.open_split(true)   end)
-  map("s",     function() M.open_split(false)  end)
-  map("n",     function() M.create_new()       end)
-  map("r",     function() M.rename()           end)
-  map("d",     function() M.delete()           end)
-  map(".",     function() M.toggle_hidden()    end)
-  map("q",     function() M.close()            end)
-  map("<M-e>", function() M.close()            end)
+  map("l",     function() M.navigate_in()     end)
+  map("<CR>",  function() M.navigate_in()     end)
+  map("h",     function() M.go_left()         end)
+  map("<BS>",  function() M.go_left()         end)
+  map("v",     function() M.open_split(true)  end)
+  map("s",     function() M.open_split(false) end)
+  map(".",     function() M.toggle_hidden()   end)
+  map("q",     function() M.close()           end)
+  map("<M-e>", function() M.close()           end)
+
+  -- = triggers diff + confirm
+  map("=", function()
+    local ops = compute_ops(col)
+    show_confirm(ops, col)
+  end)
 end
 
 -- ── Column management ─────────────────────────────────────────────────────────
 local function push_column(path, focus_row)
   local col = { path = path, entries = scan_dir(path) }
   table.insert(state.columns, col)
-  local idx    = #state.columns
-  col.buf      = make_col_buf(col)
-  col.win      = open_col_win(col, idx)
-  setup_keymaps(col.buf)
+  local idx        = #state.columns
+  col.buf          = make_col_buf(col)
+  col.win          = open_col_win(col, idx)
+  setup_keymaps(col.buf, col)
   state.active_col = idx
 
   local saved = focus_row or col._saved_row or 1
@@ -207,7 +419,6 @@ local function pop_column()
     col._saved_row = vim.api.nvim_win_get_cursor(col.win)[1]
     vim.api.nvim_win_close(col.win, true)
   end
-  -- Close the corresponding shadow
   local shadow = table.remove(shadow_wins)
   if shadow and vim.api.nvim_win_is_valid(shadow) then
     vim.api.nvim_win_close(shadow, true)
@@ -241,21 +452,9 @@ end
 local function current_entry()
   local col = active_col()
   if not col then return nil end
-  local row = vim.api.nvim_win_get_cursor(col.win)[1]
+  local row  = vim.api.nvim_win_get_cursor(col.win)[1]
+  -- Match against original entries by row (buffer may be edited)
   return col.entries[row]
-end
-
-local function refresh_col(col)
-  col.entries = scan_dir(col.path)
-  local lines = {}
-  for _, e in ipairs(col.entries) do
-    local icon = e.type == "directory" and "▸ " or "  "
-    table.insert(lines, icon .. e.name)
-  end
-  if #lines == 0 then lines = { "  (empty)" } end
-  vim.bo[col.buf].modifiable = true
-  vim.api.nvim_buf_set_lines(col.buf, 0, -1, false, lines)
-  vim.bo[col.buf].modifiable = false
 end
 
 -- ── Public actions ────────────────────────────────────────────────────────────
@@ -273,10 +472,7 @@ function M.navigate_in()
 end
 
 function M.go_left()
-  if #state.columns <= 1 then
-    M.close()
-    return
-  end
+  if #state.columns <= 1 then M.close(); return end
   pop_column()
 end
 
@@ -287,54 +483,6 @@ function M.open_split(vertical)
   M.close()
   local cmd = vertical and "vsplit" or "split"
   vim.cmd(cmd .. " " .. vim.fn.fnameescape(path))
-end
-
-function M.create_new()
-  local col = active_col()
-  if not col then return end
-  local input = vim.fn.input("New (end with / for dir): ",
-    col.path:gsub("[\\/]$", "") .. "/")
-  if input == "" then return end
-  if input:sub(-1) == "/" then
-    vim.fn.mkdir(input, "p")
-  else
-    vim.fn.mkdir(vim.fn.fnamemodify(input, ":h"), "p")
-    local f = io.open(input, "w")
-    if f then f:close() end
-  end
-  refresh_col(col)
-end
-
-function M.rename()
-  local e = current_entry()
-  if not e then return end
-  local new_path = vim.fn.input("Rename to: ", e.path)
-  if new_path == "" or new_path == e.path then return end
-  local ok, err = os.rename(e.path, new_path)
-  if not ok then
-    vim.notify("Rename failed: " .. (err or "unknown"), vim.log.levels.ERROR)
-  else
-    refresh_col(active_col())
-  end
-end
-
-function M.delete()
-  local e = current_entry()
-  if not e then return end
-  local confirm = vim.fn.input("Delete '" .. e.name .. "'? [y/N]: ")
-  if confirm:lower() ~= "y" then return end
-  local ok
-  if e.type == "directory" then
-    ok = vim.fn.delete(e.path, "rf") == 0
-  else
-    ok = os.remove(e.path) ~= nil
-  end
-  if not ok then
-    vim.notify("Delete failed", vim.log.levels.ERROR)
-  else
-    trim_columns_after(state.active_col)
-    refresh_col(active_col())
-  end
 end
 
 function M.toggle_hidden()
@@ -374,18 +522,14 @@ function M.open(start_path)
   state.columns    = {}
   state.active_col = 1
 
-  -- Always open from cwd, then walk down to the file's directory
-  -- so parent columns exist and you can navigate back up
   push_column(start_path)
 
   if cur_dir ~= start_path and cur_dir:sub(1, #start_path) == start_path then
-    -- Build the chain of subdirectories between cwd and the current file
-    local relative = cur_dir:sub(#start_path + 2)  -- strip cwd + separator
+    local relative = cur_dir:sub(#start_path + 2)
     local parts    = vim.split(relative, "[/\\]", { trimempty = true })
     local path     = start_path
     for _, part in ipairs(parts) do
       path = path .. "/" .. part
-      -- Find and set the cursor on this entry in the current column
       local col = state.columns[#state.columns]
       for i, e in ipairs(col.entries) do
         if e.name == part then
@@ -395,8 +539,7 @@ function M.open(start_path)
       end
       push_column(path)
     end
-    -- In the final column, place cursor on the actual file
-    local col = state.columns[#state.columns]
+    local col   = state.columns[#state.columns]
     local fname = vim.fn.fnamemodify(cur_file, ":t")
     for i, e in ipairs(col.entries) do
       if e.name == fname then
