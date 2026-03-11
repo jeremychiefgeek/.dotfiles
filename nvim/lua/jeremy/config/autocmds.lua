@@ -20,6 +20,30 @@ au("VimEnter", {
   end,
 })
 
+-- ── New C/C++ file templates (BufNewFile fires before FileType) ─────────────
+aug("jeremy_new_file_templates", { clear = true })
+au("BufNewFile", {
+  group    = "jeremy_new_file_templates",
+  pattern  = { "*.h", "*.H", "*.hin" },
+  callback = function()
+    -- Defer so the buffer is fully set up before we write lines
+    vim.schedule(function()
+      local ac = require("jeremy.config.autocmds")
+      ac._header_format()
+    end)
+  end,
+})
+au("BufNewFile", {
+  group    = "jeremy_new_file_templates",
+  pattern  = { "*.c", "*.C", "*.cpp", "*.cin" },
+  callback = function()
+    vim.schedule(function()
+      local ac = require("jeremy.config.autocmds")
+      ac._source_format()
+    end)
+  end,
+})
+
 -- ── File-type associations ───────────────────────────────────────────────────
 aug("jeremy_filetypes", { clear = true })
 au({ "BufNewFile", "BufRead" }, {
@@ -90,28 +114,20 @@ au("FileType", {
     vim.keymap.set("i", "<CR>",    "<CR><C-f>", { buffer = buf })
 
     -- Buffer-local normal maps
-    bmap("<M-f>",  function() require("jeremy.config.autocmds")._find_corresponding() end)
-    bmap("<M-ff>", function() require("jeremy.config.autocmds")._find_corresponding_other_window() end)
-    bmap("<M-s>",  function() require("jeremy.config.autocmds")._save_buffer() end)
-    bmap("<M-j>",  "g<C-]>")     -- jump to tag
-    bmap("<M-.>",  "gqip")       -- reformat paragraph
-    bmap("<M-/>",  "vaf")        -- select a function
-    bmap("<M-a>",  "p=']")       -- paste and re-indent
-    bmap("<M-z>",  "d")          -- delete (Emacs kill)
+    bmap("<leader>f",  function() require("jeremy.config.autocmds")._find_corresponding() end)
+    bmap("<leader>ff", function() require("jeremy.config.autocmds")._find_corresponding_other_window() end)
+    bmap("<leader>s",  function() require("jeremy.config.autocmds")._save_buffer() end)
+    bmap("<leader>j",  "g<C-]>")     -- jump to tag
+    bmap("<leader>.",  "gqip")       -- reformat paragraph
+    bmap("<leader>/",  "vaf")        -- select a function
+    bmap("<leader>a",  "p=']")       -- paste and re-indent
+    bmap("<leader>z",  "d")          -- delete (Emacs kill)
 
     -- Error format additions for MSVC
     vim.opt_local.errorformat:append("%*[0-9]>%f(%l) : %t%*[a-z ]C%n: %m")
     vim.opt_local.errorformat:append("%f(%l) : %t%*[a-z ]C%n: %m")
 
-    -- New-file templates
-    if vim.fn.filereadable(vim.fn.expand("%")) == 0 then
-      local fname = vim.fn.expand("%")
-      if fname:match("%.[hH][iI][nN]?$") then
-        require("jeremy.config.autocmds")._header_format()
-      elseif fname:match("%.[cC][pP][pP]?$") or fname:match("%.cin$") then
-        require("jeremy.config.autocmds")._source_format()
-      end
-    end
+    -- Templates are applied via the BufNewFile autocmd in autocmds.lua
   end,
 })
 
@@ -119,30 +135,47 @@ au("FileType", {
 
 local M = {}
 
-function M._header_format()
-  local base  = vim.fn.fnamemodify(vim.fn.expand("%"), ":t:r"):upper()
-  local guard = base .. "_H"
-  vim.fn.setline(1,  "#ifndef " .. guard)
-  vim.fn.append(1,  "/* ========================================================================")
-  vim.fn.append(2,  "   $File: $")
-  vim.fn.append(3,  "   $Date: $")
-  vim.fn.append(4,  "   $Revision: $")
-  vim.fn.append(5,  "   $Creator: Jeremy Evans $")
-  vim.fn.append(6,  "   $Notice: (C) Copyright 2026 by Chief Geek, LLC. All Rights Reserved. $")
-  vim.fn.append(7,  "   ======================================================================== */")
-  vim.fn.append(8,  "")
-  vim.fn.append(9,  "#define " .. guard)
-  vim.fn.append(10, "#endif")
+-- Returns the header template lines for a given file path.
+-- Used both for writing to buffers and directly to disk (mini.files).
+function M._header_lines(path)
+  local fname = path
+    and vim.fn.fnamemodify(path, ":t:r")
+    or  vim.fn.fnamemodify(vim.fn.expand("%"), ":t:r")
+  local guard = fname:upper() .. "_H"
+  return {
+    "#ifndef " .. guard,
+    "/* ========================================================================",
+    "   $File: $",
+    "   $Date: $",
+    "   $Revision: $",
+    "   $Creator: Jeremy Evans $",
+    "   $Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved. $",
+    "   ======================================================================== */",
+    "",
+    "#define " .. guard,
+    "#endif",
+  }
+end
+
+function M._source_lines()
+  return {
+    "/* ========================================================================",
+    "   $File: $",
+    "   $Date: $",
+    "   $Revision: $",
+    "   $Creator: Jeremy Evans $",
+    "   $Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved. $",
+    "   ======================================================================== */",
+  }
+end
+
+-- Write template into the current buffer (used by BufNewFile autocmd)
+function M._header_format(path)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, M._header_lines(path))
 end
 
 function M._source_format()
-  vim.fn.setline(1, "/* ========================================================================")
-  vim.fn.append(1,  "   $File: $")
-  vim.fn.append(2,  "   $Date: $")
-  vim.fn.append(3,  "   $Revision: $")
-  vim.fn.append(4,  "   $Creator: Jeremy Evans $")
-  vim.fn.append(5,  "   $Notice: (C) Copyright 2026 by Chief Geek, LLC. All Rights Reserved. $")
-  vim.fn.append(6,  "   ======================================================================== */")
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, M._source_lines())
 end
 
 function M._find_corresponding()

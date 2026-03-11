@@ -16,6 +16,10 @@ map("n", "<C-l>", "<C-w>l")
 map("n", "<C-j>", "<C-w>j")
 map("n", "<C-k>", "<C-w>k")
 
+-- ── Keep visual selection after indent ───────────────────────────────────────
+map("v", ">", ">gv")
+map("v", "<", "<gv")
+
 -- ── Word / paragraph motion ──────────────────────────────────────────────────
 map("n", "<C-Right>", "w")
 map("n", "<C-Left>",  "b")
