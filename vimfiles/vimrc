@@ -14,6 +14,9 @@ let loaded_matchparen = 1
 let mapleader = " "
 set clipboard=unnamed
 set noswapfile
+set belloff=all
+set splitright
+set splitbelow
 
 " --------- Missing niceties ---------------------------------------------------
 set wildmenu
@@ -244,7 +247,7 @@ endfunction
 function! s:JeremyHeaderFormat()
   let l:base = toupper(fnamemodify(expand("%"), ":t:r"))
   let l:guard = l:base . "_H"
-  call setline(1, "#if !defined(" . l:guard . ")")
+  call setline(1, "#ifndef " . l:guard)
   call append(1, "/* ========================================================================")
   call append(2, "   $File: $")
   call append(3, "   $Date: $")
@@ -286,10 +289,18 @@ function! s:FindCorrespondingFile()
   elseif l:file =~# '\.cpp$'
     let l:corresponding = l:base . ".h"
   endif
-  if l:corresponding != ""
-    exec "edit " . fnameescape(l:corresponding)
-  else
+  if l:corresponding == ""
     echoerr "Unable to find a corresponding file"
+    return
+  endif
+  if winnr('$') > 1
+    " Another window exists — open there
+    wincmd w
+    exec "edit " . fnameescape(l:corresponding)
+    wincmd p
+  else
+    " Only one window — create a vsplit
+    exec "vsplit " . fnameescape(l:corresponding)
   endif
 endfunction
 
