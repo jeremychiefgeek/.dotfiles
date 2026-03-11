@@ -1,22 +1,34 @@
-require("options")
-require("keymaps")
-require("autocmds")
-require("build")
-require("todo")
+-- init.lua
+-- Bootstrap lazy.nvim, then load Jeremy's config modules.
 
--- Open explorer at current file's directory
--- vim.keymap.set("n", "<M-E>", function()
---   require("explorer").open(vim.fn.expand("%:p:h"))
--- end, { noremap = true })
+-- ── Bootstrap lazy.nvim ──────────────────────────────────────────────────────
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
 
+-- Leader must be set before plugins load so lazy mappings pick it up.
+vim.g.mapleader = " "
 
--- ── Plugins ───────────────────────────────────────────────────────────────────
-require("pack").setup({
-  -- Add plugins here as "author/repo", e.g.:
-  -- "nvim-lua/plenary.nvim",
-  "kdheepak/lazygit.nvim",
+-- ── Config modules ───────────────────────────────────────────────────────────
+require("jeremy.config.options")
+require("jeremy.config.keymaps")
+require("jeremy.config.autocmds")
+require("jeremy.config.build")
+require("jeremy.config.todo")
+
+-- ── Plugins (minimal — no LSP/intellisense) ──────────────────────────────────
+require("lazy").setup("jeremy.plugins", {
+  change_detection = { notify = false },
+  ui = { border = "rounded" },
 })
 
-
--- Theme (place compline.lua in ~/.config/nvim/lua/colors/ and load via:)
-vim.cmd("colorscheme compline")
+-- ── Colorscheme ──────────────────────────────────────────────────────────────
+-- colors/compline.lua is on the rtp via the nvim config root.
+vim.cmd.colorscheme("compline")

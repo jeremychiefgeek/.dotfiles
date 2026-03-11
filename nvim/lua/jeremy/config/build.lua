@@ -1,13 +1,18 @@
+-- lua/jeremy/config/build.lua
+-- Port of MakeWithoutAsking / compilation-directory helpers.
+
 local M = {}
 
-vim.g.compilation_directory_locked = false
-vim.g.last_compilation_directory   = ""
+M.locked    = false
+M.last_dir  = ""
 
 local function find_project_dir()
   local dir = vim.fn.expand("%:p:h")
   if dir == "" then dir = vim.fn.getcwd() end
+  local script = vim.g.jeremy_makescript
+
   while true do
-    if vim.loop.fs_stat(dir .. "/" .. vim.g.jeremy_makescript) then
+    if vim.fn.filereadable(dir .. "/" .. script) == 1 then
       vim.cmd("cd " .. vim.fn.fnameescape(dir))
       return true
     end
@@ -18,27 +23,36 @@ local function find_project_dir()
 end
 
 function M.lock()
-  vim.g.compilation_directory_locked = true
+  M.locked = true
   print("Compilation directory is locked.")
 end
 
 function M.unlock()
-  vim.g.compilation_directory_locked = false
+  M.locked = false
   print("Compilation directory is roaming.")
 end
 
 function M.make()
   local start_dir = vim.fn.getcwd()
-  if vim.g.compilation_directory_locked then
-    vim.cmd("cd " .. vim.fn.fnameescape(vim.g.last_compilation_directory))
+
+  if M.locked then
+    vim.cmd("cd " .. vim.fn.fnameescape(M.last_dir))
   else
     find_project_dir()
-    vim.g.last_compilation_directory = vim.fn.getcwd()
+    M.last_dir = vim.fn.getcwd()
   end
-  local script = vim.fn.getcwd() .. (vim.g.jeremy_win32 and "\\" or "/") .. vim.g.jeremy_makescript
-  local cmd    = vim.g.jeremy_win32 and ("cmd /c " .. script) or script
+
+  local cwd = vim.fn.getcwd()
+  local cmd
+  if vim.g.jeremy_win32 then
+    cmd = "cmd /c " .. cwd .. "\\" .. vim.g.jeremy_makescript
+  else
+    cmd = "cd " .. vim.fn.shellescape(cwd) .. " && " .. vim.g.jeremy_makescript
+  end
+
   local output = vim.fn.system(cmd)
   print(output)
+
   vim.cmd("cd " .. vim.fn.fnameescape(start_dir))
   vim.cmd("wincmd p")
 end
