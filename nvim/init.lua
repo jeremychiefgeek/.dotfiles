@@ -29,6 +29,14 @@ require("lazy").setup("jeremy.plugins", {
   ui = { border = "rounded" },
 })
 
+-- Start the Plugins that need to be started
+require('lualine').setup({
+  options = {
+    globalstatus = true, -- Ensures each window has its own statusline
+    -- Other options...
+  },
+})
+
 -- ── Colorscheme ──────────────────────────────────────────────────────────────
 -- colors/compline.lua is on the rtp via the nvim config root.
 vim.cmd.colorscheme("compline")
