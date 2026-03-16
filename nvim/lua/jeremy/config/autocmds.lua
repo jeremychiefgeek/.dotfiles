@@ -114,14 +114,14 @@ au("FileType", {
     vim.keymap.set("i", "<CR>",    "<CR><C-f>", { buffer = buf })
 
     -- Buffer-local normal maps
-    bmap("<leader>f",  function() require("jeremy.config.autocmds")._find_corresponding() end)
-    bmap("<leader>ff", function() require("jeremy.config.autocmds")._find_corresponding_other_window() end)
-    bmap("<leader>s",  function() require("jeremy.config.autocmds")._save_buffer() end)
-    bmap("<leader>j",  "g<C-]>")     -- jump to tag
-    bmap("<leader>.",  "gqip")       -- reformat paragraph
-    bmap("<leader>/",  "vaf")        -- select a function
-    bmap("<leader>a",  "p=']")       -- paste and re-indent
-    bmap("<leader>z",  "d")          -- delete (Emacs kill)
+    bmap("<M-f>",  function() require("jeremy.config.autocmds")._find_corresponding() end)
+    bmap("<M-ff>", function() require("jeremy.config.autocmds")._find_corresponding_other_window() end)
+    bmap("<M-s>",  function() require("jeremy.config.autocmds")._save_buffer() end)
+    bmap("<M-j>",  "g<C-]>")     -- jump to tag
+    bmap("<M-.>",  "gqip")       -- reformat paragraph
+    bmap("<M-/>",  "vaf")        -- select a function
+    bmap("<M-a>",  "p=']")       -- paste and re-indent
+    bmap("<M-z>",  "d")          -- delete (Emacs kill)
 
     -- Error format additions for MSVC
     vim.opt_local.errorformat:append("%*[0-9]>%f(%l) : %t%*[a-z ]C%n: %m")
