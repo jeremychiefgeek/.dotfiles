@@ -20,6 +20,9 @@ map("n", "<C-k>", "<C-w>k")
 map("v", ">", ">gv")
 map("v", "<", "<gv")
 
+-- ── Basic Window Commands ───────────────────────────────────────
+map("n", "<C-q>", "<Cmd>q<CR>")
+
 -- ── Word / paragraph motion ──────────────────────────────────────────────────
 map("n", "<C-Right>", "w")
 map("n", "<C-Left>",  "b")
@@ -35,6 +38,7 @@ map("i", "<End>",  "<C-o>$")
 -- ── Page up/down ─────────────────────────────────────────────────────────────
 map("n", "<PageDown>",   "<C-f>")
 map("n", "<PageUp>",     "<C-b>")
+
 -- Scroll other window half-page
 map("n", "<C-PageDown>", "<C-w>w<C-d><C-w>p")
 map("n", "<C-PageUp>",   "<C-w>w<C-u><C-w>p")
