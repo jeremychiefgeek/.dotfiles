@@ -22,6 +22,7 @@ map("v", "<", "<gv")
 
 -- ── Basic Window Commands ───────────────────────────────────────
 map("n", "<C-q>", "<Cmd>q<CR>")
+map("n", "<C-s>", "<Cmd>w<CR>")
 
 -- ── Word / paragraph motion ──────────────────────────────────────────────────
 map("n", "<C-Right>", "w")

@@ -15,6 +15,8 @@ opt.swapfile       = false
 opt.belloff        = "all"
 opt.undolevels     = 10000
 opt.undoreload     = 100000
+opt.splitright     = true
+opt.splitbelow     = true
 
 -- Disable matchparen highlight (let loaded_matchparen = 1)
 vim.g.loaded_matchparen = 1
