@@ -142,14 +142,15 @@ function M._header_lines(path)
     and vim.fn.fnamemodify(path, ":t:r")
     or  vim.fn.fnamemodify(vim.fn.expand("%"), ":t:r")
   local guard = fname:upper() .. "_H"
+  local headerName = fname .. ".h"
   return {
     "#ifndef " .. guard,
     "/* ========================================================================",
-    "   $File: $",
-    "   $Date: $",
-    "   $Revision: $",
-    "   $Creator: Jeremy Evans $",
-    "   $Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved. $",
+    "   File: ".. headerName,
+    "   Date: " .. os.date("%m/%d/%Y"),
+    "   Revision: ",
+    "   Creator: Jeremy Evans",
+    "   Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved.",
     "   ======================================================================== */",
     "",
     "#define " .. guard,
@@ -157,14 +158,18 @@ function M._header_lines(path)
   }
 end
 
-function M._source_lines()
+function M._source_lines(path)
+  local fname = path
+    and vim.fn.fnamemodify(path, ":t:r")
+    or  vim.fn.fnamemodify(vim.fn.expand("%"), ":t:r")
+  local srcFile = fname .. ".c"
   return {
     "/* ========================================================================",
-    "   $File: $",
-    "   $Date: $",
-    "   $Revision: $",
-    "   $Creator: Jeremy Evans $",
-    "   $Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved. $",
+    "   File: " .. srcFile,
+    "   Date: " .. os.date("%m/%d/%Y"),
+    "   Revision: ",
+    "   Creator: Jeremy Evans",
+    "   Notice: (C) Copyright " .. os.date("%Y") .. " by Chief Geek, LLC. All Rights Reserved. ",
     "   ======================================================================== */",
   }
 end

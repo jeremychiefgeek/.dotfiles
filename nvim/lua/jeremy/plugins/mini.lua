@@ -50,7 +50,7 @@ return {
             if path:match("%.[hH]$") or path:match("%.hin$") then
               lines = ac._header_lines(path)
             elseif path:match("%.[cC]$") or path:match("%.cpp$") or path:match("%.cin$") then
-              lines = ac._source_lines()
+              lines = ac._source_lines(path)
             end
 
             if lines then

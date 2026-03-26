@@ -4,7 +4,7 @@
 
 local M = {}
 
-local KEYWORDS = { "TODO", "STUDY", "IMPORTANT", "NOTE" }
+local KEYWORDS = { "TODO", "STUDY", "IMPORTANT", "NOTE", "INFO", "FIXME" }
 local PATTERN  = table.concat(KEYWORDS, "\\|")
 
 function M.show()
